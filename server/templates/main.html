@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block body %}
+<p id="colors">{{ html_colors }}</p>
+
+<br>
+<form action="" method="get">
+	<select name="color" onchange="this.form.submit()">
+		<option value="" selected>- color -</option>
+    {% for x in colors %}
+      <option value="{{ x[1] }}">{{ x[0] }}</option>
+    {% endfor %}
+  </select>
+  <input name="color2" type="color" onchange="this.form.submit()"></input>
+  <select name="preset" onchange="this.form.submit()">
+		<option value="" selected>- preset -</option>
+    {% for x in presets %}
+      <option value="{{ x[1] }}">{{ x[0] }}</option>
+    {% endfor %}
+  </select>
+</form>
+
+<script>
+function httpGet(theUrl)
+{
+  var xmlHttp = null;
+  xmlHttp = new XMLHttpRequest();
+  xmlHttp.open("GET", theUrl, false);
+  xmlHttp.send(null);
+  return xmlHttp.responseText;
+}
+
+function updateColors(timeout, num_updates) {
+  document.getElementById("colors").innerHTML = httpGet("{{ host_url }}get_colors_html");
+  if (num_updates > 0) {
+    setTimeout(function(){ updateColors(timeout, num_updates - 1) }, timeout);
+  }
+}
+
+updateColors(100, 600);
+</script>
+
+{% endblock %}
