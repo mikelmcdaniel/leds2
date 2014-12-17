@@ -19,8 +19,12 @@ class RGB(object):
     b = min(255, max(0, b))
     (self.r, self.g, self.b) = (r, g, b)
 
-  def __str__(self):
-    return '{}{}{}'.format(chr(self.g), chr(self.r), chr(self.b))
+    if config.config['rgb_order'] == 'grb':
+      def __str__(self):
+        return '{}{}{}'.format(chr(self.g), chr(self.r), chr(self.b))
+    elif config.config['rgb_order'] == 'brg':
+      def __str__(self):
+        return '{}{}{}'.format(chr(self.b), chr(self.r), chr(self.g))
 
   def mixed(self, other, alpha):
     return RGB(
@@ -47,10 +51,8 @@ class PresetLedThread(threading.Thread):
       if self.leds.cur_preset is not None:
         self.leds.cur_preset.draw(self.leds)
         self.leds.flush()
-        # time.sleep(0.1)
       else:
-        print 'THREAD :( ***'
-        time.sleep(1)
+        time.sleep(0.5)
 
 class Pixels(list):
   def __init__(self, num_pixels, default_color=RGB(127, 127, 127)):
