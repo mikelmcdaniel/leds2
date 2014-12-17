@@ -1,8 +1,8 @@
 import pywapi
 import string
 import time
-from datetime import date
-from math import acos, tan, sin, cos, radians, degrees, pi
+import datetime
+import astral
 
 class SimpleWeather(object):
   def __init__(self):
@@ -27,7 +27,6 @@ Drizzle
 Breezy
 Light Snow
 Unknown Precip
-
 '''
 def parse_weather_modifier(modifier):
   if modifier in ['very', 'mostly', 'high', 'heavy']:
@@ -77,6 +76,10 @@ def get_seconds(time):
   seconds = time.tm_hour * 3600 + time.tm_min * 60 + time.tm_sec
   return float(seconds)
 
+def get_sun_seconds(time):
+  seconds = time.hour * 3600 + time.minute * 60 + time.second
+  return float(seconds)
+
 def get_sun_position(now=None, sunrise=None, sunset=None):
   if now is None:
     now = get_seconds(time.localtime())
@@ -106,21 +109,12 @@ def get_moon_position(now=None, sunset=None, sunrise=None):
   else:
     return moon_position
 
-def acosd(x):
-  return degrees(acos(radians(x)))
-
-def tand(x):
-  return degrees(tan(radians(x)))
-
-def sind(x):
-  return degrees(sin(radians(x)))
-
-def cosd(x):
-  return degrees(cos(radians(x)))
-
-def get_sun_info(latitude=37.3894, year_day=None):
-  return 21600.0, 64800.0
-
-
-
-
+def get_sun_info():
+  sun_info = astral.Astral()
+  location = sun_info['San Francisco']
+  timezone = location.timezone
+  d = datetime.date.today()
+  sun = location.sun(local=True, date=d)
+  sunrise = get_sun_seconds(sun['sunrise'])
+  sunset = get_sun_seconds(sun['sunset'])
+  return float(sunrise), float(sunset)
