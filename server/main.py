@@ -137,10 +137,8 @@ if __name__ == '__main__':
     debug = True
     LEDS = led_controller.Leds(USB_FILE_NAME, NUM_LEDS)
   elif argv[1] == 'debug':
-    print '*** start debug'
     debug = True
     LEDS = led_controller.FakeLeds(NUM_LEDS)
-    print '*** end debug'
   for preset in presets.PRESET_CLASSES:
     preset = preset()
     LEDS.register_preset(preset)

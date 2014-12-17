@@ -101,19 +101,6 @@ inline void send_pixels(uint8_t * pixels) {
 #endif
 }
 
-inline void set_color(uint8_t * pixels, uint8_t r, uint8_t g, uint8_t b) {
-  pixels[0] = b;
-  pixels[1] = r;
-  pixels[2] = g;
-}
-
-
-inline void get_color(uint8_t * pixels, uint8_t * r, uint8_t * g, uint8_t * b) {
-  *b = pixels[0];
-  *r = pixels[1];
-  *g = pixels[2];
-}
-
 void setup() {
 	int j;
   Serial.begin(115200);
@@ -121,9 +108,9 @@ void setup() {
   pinMode(9, OUTPUT);
   pinMode(11, OUTPUT);
 
-	// set color to default background color
-	for (j = 0; j < NUM_LEDS; j++) {
-		set_color(pixels + j * 3, random(80), random(80), random(80));
+  // initialize pixels to random, dim color
+	for (j = 3 * NUM_LEDS - 1; j >= 0 ; j--) {
+    pixels[j] = random(100);
 	}
   send_pixels(&pixels[0]);
 }

@@ -19,12 +19,14 @@ class RGB(object):
     b = min(255, max(0, b))
     (self.r, self.g, self.b) = (r, g, b)
 
-    if config.config['rgb_order'] == 'grb':
-      def __str__(self):
-        return '{}{}{}'.format(chr(self.g), chr(self.r), chr(self.b))
-    elif config.config['rgb_order'] == 'brg':
-      def __str__(self):
-        return '{}{}{}'.format(chr(self.b), chr(self.r), chr(self.g))
+  if config.config['rgb_order'] == 'grb':
+    def __str__(self):
+      return '{}{}{}'.format(chr(self.g), chr(self.r), chr(self.b))
+  elif config.config['rgb_order'] == 'brg':
+    def __str__(self):
+      return '{}{}{}'.format(chr(self.b), chr(self.r), chr(self.g))
+  else:
+    raise Exception('rgb_order "{}" is not handled.'.format(config.config['rgb_order']))
 
   def mixed(self, other, alpha):
     return RGB(
