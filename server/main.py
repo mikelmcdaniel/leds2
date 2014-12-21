@@ -139,8 +139,7 @@ if __name__ == '__main__':
   elif argv[1] == 'debug':
     debug = True
     LEDS = led_controller.FakeLeds(NUM_LEDS)
-  for preset in presets.PRESET_CLASSES:
-    preset = preset()
+  for preset in presets.PRESETS:
     LEDS.register_preset(preset)
     PRESETS.append((preset.name, preset.name))
   app.run(host='0.0.0.0', port=5000, debug=debug, use_reloader=False)

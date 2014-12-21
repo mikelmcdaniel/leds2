@@ -33,29 +33,37 @@ class RGB(object):
         int(alpha * other.b + (1 - alpha) * self.b))
 
 
-def timed(interval, iterable=None):
-  if iterable is None:
-    iterable = itertools.repeat(None)
-  for x in iterable:
-    last_time = time.time()
-    yield x
-    time.sleep(max(0, last_time + interval - time.time()))
-
 class PresetLedThread(threading.Thread):
   def __init__(self, leds):
     super(PresetLedThread, self).__init__()
     self.leds = leds
+    self.next_update_time = 0
 
+  # TODO Add proper locking; this triple-checking code is gross.
+  # TODO Make this thread re-spawn if it dies.
   def run(self):
-    for _ in timed(0.05):
+    while True:
       if self.leds.cur_preset is not None:
-        self.leds.cur_preset.draw(self.leds)
-        self.leds.flush()
+        try:
+          time.sleep(self.next_update_time - time.time())
+        except IOError as e:
+          if e.errno != 22:  # 22 -> "Invalid Argument"
+            raise e
+          # Tried to sleep for negative seconds.
+        if self.leds.cur_preset is not None:
+          try:
+            self.next_update_time = (
+              time.time() + self.leds.cur_preset.seconds_per_frame)
+            self.leds.cur_preset.draw(self.leds)
+            self.leds.flush()
+          except AttributeError as e:
+            if self.leds.cur_preset is not None:
+              raise e
       else:
-        time.sleep(0.5)
+        time.sleep(0.2)
 
 class Pixels(list):
-  def __init__(self, num_pixels, default_color=RGB(127, 127, 127)):
+  def __init__(self, num_pixels, default_color=RGB(0xee, 0x33, 0x11)):
     super(Pixels, self).__init__()
     self.extend(default_color for _ in xrange(num_pixels))
 
@@ -138,7 +146,7 @@ class Leds(BaseLeds):
 
   def flush(self):
     super(Leds, self).flush()
-    msg = ['SYNC']
+    msg = ['YNC']
     if self._half_reversed:
       msg.extend(str(p) for p in itertools.islice(
           self.pixels, 0, len(self.pixels) / 2))
@@ -146,6 +154,7 @@ class Leds(BaseLeds):
           len(self.pixels) - 1, len(self.pixels) / 2 - 1, -1))
     else:
       msg.extend(str(p) for p in self.pixels)
+    msg.append('S')
     self.usb.write(''.join(msg))
     self.usb.flush()
     self.last_update_time = time.time()

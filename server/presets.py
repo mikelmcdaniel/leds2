@@ -2,13 +2,14 @@ import led_controller
 import random
 
 RGB = led_controller.RGB
-PRESET_CLASSES = []
+PRESETS = []
 PRIMES = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79]
 
 
 class Preset(object):
-  def __init__(self, name):
+  def __init__(self, name, seconds_per_frame=0.05):
     self.name = name
+    self.seconds_per_frame = seconds_per_frame
 
   def draw(self, leds):
     pass
@@ -57,5 +58,5 @@ class Cars(Preset):
       leds.pixels.draw_line(x - 1, x + 1, rainbow_color(car.color))
     # time.sleep(0.01)
 
-PRESET_CLASSES.append(Cars)
+PRESETS.append(Cars())
 

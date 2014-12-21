@@ -110,5 +110,5 @@ class WeatherPreset(presets.Preset):
         cloud.draw(leds)
 
 
-presets.PRESET_CLASSES.append(WeatherPreset)
+presets.PRESETS.append(WeatherPreset())
 
