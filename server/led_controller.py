@@ -7,8 +7,6 @@ import time
 
 import config
 
-MIN_DELAY_BETWEEN_UPDATES_PER_LED = 0.1 / 144
-
 def parse_rgb(rgb):
   return RGB(*(int(rgb[j:j + 2], 16) for j in xrange(0, 6, 2)))
 
@@ -131,19 +129,15 @@ class Leds(BaseLeds):
     self.usb_device_file = usb_device_file
     self._init_usb()
     self.last_update_time = 0
-    self.min_delay = MIN_DELAY_BETWEEN_UPDATES_PER_LED * self.num_leds
     self._half_reversed = config.config['half_reversed']
 
   def _init_usb(self):
+    # writeTimeout=0 makes the flush() operation asynchronous.
     self.usb = serial.Serial(
-      port=self.usb_device_file, baudrate=115200, timeout=100)
+      port=self.usb_device_file, baudrate=115200, timeout=100, writeTimeout=0)
 
   def flush(self):
     super(Leds, self).flush()
-    try:
-      time.sleep(self.last_update_time + self.min_delay - time.time())
-    except IOError:
-      pass  # Tried to sleep for negative time.
     msg = ['SYNC']
     if self._half_reversed:
       msg.extend(str(p) for p in itertools.islice(

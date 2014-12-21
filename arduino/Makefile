@@ -275,7 +275,6 @@
 #
 ########################################################################
 
-#mikel
 ifndef ARDUINO_DIR
 ARDUINO_DIR = /usr/share/arduino
 endif
@@ -292,7 +291,7 @@ endif
 #
 # Arduino version number
 ifndef ARDUINO_VERSION
-ARDUINO_VERSION = 100
+ARDUINO_VERSION = 105
 endif
 
 ########################################################################
@@ -301,19 +300,14 @@ endif
 ifdef ARDUINO_DIR
 
 ifndef AVR_TOOLS_DIR
-#mikel
 AVR_TOOLS_DIR     = $(ARDUINO_DIR)/hardware/tools
 # The avrdude bundled with Arduino can't find its config
 ifndef AVRDUDE_CONF
-#AVRDUDE_CONF	  = $(AVR_TOOLS_DIR)/etc/avrdude.conf
-#mikel
 AVRDUDE_CONF = $(AVR_TOOLS_DIR)/avrdude.conf
 endif
 endif
 
 ifndef AVR_TOOLS_PATH
-#AVR_TOOLS_PATH    = $(AVR_TOOLS_DIR)/bin
-#mikel
 AVR_TOOLS_PATH = /usr/bin
 endif
 
@@ -330,7 +324,6 @@ endif
 ########################################################################
 # Makefile distribution path
 #
-#mikel
 ARDMK_DIR = /usr
 ifdef ARDMK_DIR
 
@@ -545,8 +538,6 @@ ASFLAGS       = -mmcu=$(MCU) -I. -x assembler-with-cpp
 LDFLAGS       = -mmcu=$(MCU) -Wl,--gc-sections -Os
 
 # Expand and pick the first port
-#ARD_PORT      = $(firstword $(wildcard $(ARDUINO_PORT)))
-#mikel
 ARD_PORT = $(shell python ../server/config.py usb_file_name)
 
 # Implicit rules for building everything (needed to get everything in
