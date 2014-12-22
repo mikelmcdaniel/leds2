@@ -9,6 +9,7 @@ configs = (
     'half_reversed': 0,
     'rgb_order': 'grb',
     'num_leds': 144,
+    'debug': True,
   },
   {
     'name': 'living_room',
@@ -17,6 +18,7 @@ configs = (
     'half_reversed': 1,
     'rgb_order': 'brg',
     'num_leds': 200,
+    'debug': True,
   },
 )
 

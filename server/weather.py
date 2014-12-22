@@ -1,8 +1,11 @@
-import pywapi
+import datetime
 import string
 import time
-import datetime
+
 import astral
+import pywapi
+
+import config
 
 class SimpleWeather(object):
   def __init__(self):
@@ -58,6 +61,11 @@ def parse_weather(weather_str):
   return weather
 
 def get_weather(location_id='KSJC', weather_source='noaa'):
+  if config.config['debug']:
+    current_weather = parse_weather('cloudy rainy')
+    current_weather.celcius = 30.0
+    return current_weather
+
   if weather_source == 'noaa':
     noaa_result = pywapi.get_weather_from_noaa(location_id)
     current_weather = parse_weather(string.lower(noaa_result['weather']))
@@ -120,3 +128,7 @@ def get_sun_info():
   sunrise = get_sun_seconds(sun['sunrise'])
   sunset = get_sun_seconds(sun['sunset'])
   return float(sunrise), float(sunset)
+
+def get_moon_info():
+  moonset, moonrise = get_sun_info()
+  return moonrise, moonset

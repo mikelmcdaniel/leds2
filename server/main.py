@@ -136,12 +136,12 @@ if __name__ == '__main__':
     print 'Usage: python {} (prod|debug)'.format(argv[0])
     exit(1)
   elif argv[1] == 'prod':
-    debug = True
+    config.config['debug'] = False
     LEDS = led_controller.Leds(USB_FILE_NAME, NUM_LEDS)
   elif argv[1] == 'debug':
-    debug = True
+    config.config['debug'] = True
     LEDS = led_controller.FakeLeds(NUM_LEDS)
   for preset in presets.PRESETS:
     LEDS.register_preset(preset)
     PRESETS.append((preset.name, preset.name))
-  app.run(host='0.0.0.0', port=5000, debug=debug, use_reloader=False)
+  app.run(host='0.0.0.0', port=5000, debug=config.config['debug'], use_reloader=False)

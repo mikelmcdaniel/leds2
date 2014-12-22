@@ -8,6 +8,7 @@ import led_controller
 import weather
 import presets
 
+
 def time_memoized(check_interval):
   next_update_time = collections.defaultdict(int)
   last_result = {}
@@ -19,6 +20,7 @@ def time_memoized(check_interval):
       return last_result[args]
     return time_memoized
   return time_memoizer
+
 
 class Sun(object):
   def __init__(self):
@@ -42,8 +44,33 @@ class Sun(object):
 
   def draw(self, leds, seconds_past):
     self._iterate(seconds_past)
-    pos = leds.num_leds * (0.9 + self.pos * 0.5)
-    leds.pixels.draw_line(pos - self.width / 2, pos + self.width / 2, led_controller.RGB(200, 200, 0))
+    pos = leds.num_leds * (0.9 + self.pos * 0.35)
+    leds.pixels.draw_line(pos - self.width / 2, pos + self.width / 2, led_controller.RGB(250, 180, 0))
+
+
+class Moon(object):
+  def __init__(self):
+    self.pos = None
+    self.width = None
+
+  @time_memoized(3600)
+  def get_moonrise_moonset(self):
+    return weather.get_moon_info()
+
+  def _iterate(self, seconds_past):
+    moonrise, moonset = self.get_moonrise_moonset()
+    pos = weather.get_moon_position(weather.get_seconds(), moonrise, moonset)
+    if pos is None:
+      self.pos = 0.0  # arbitrary value
+      self.width = 0.0
+    else:
+      self.pos = pos
+      self.width = 5.0
+
+  def draw(self, leds, seconds_past):
+    self._iterate(seconds_past)
+    pos = leds.num_leds * (0.35 + self.pos * 0.45)
+    leds.pixels.draw_line(pos - self.width / 2, pos + self.width / 2, led_controller.RGB(230, 230, 230))
 
 class Cloud(object):
   def __init__(self):
@@ -61,15 +88,15 @@ class Cloud(object):
 
 class RainDrop(object):
   def __init__(self):
-    self.pos = None
-    self.width = 0
-    self.fade_rate = 0.9 + 0.05 * random.random()
+    self.pos = random.random()
+    self.width = random.random()
+    self.fade_rate = 0.2 + 0.1 * random.random()
 
   def _iterate(self, seconds_past):
     self.width *= self.fade_rate**seconds_past
     if self.width < 0.2:
       self.pos = random.random()
-      self.width = 1
+      self.width = 0.8
 
   def draw(self, leds, seconds_past):
     self._iterate(seconds_past)
@@ -80,6 +107,7 @@ class WeatherPreset(presets.Preset):
   def __init__(self, name='Weather'):
     super(WeatherPreset, self).__init__(name)
     self.sun = Sun()
+    self.moon = Moon()
     self.clouds = [Cloud() for _ in xrange(10)]
     self.rain_drops = [RainDrop() for _ in xrange(100)]
 
@@ -97,13 +125,13 @@ class WeatherPreset(presets.Preset):
     for j in xrange(leds.num_leds):
       leds.pixels[j] = sky_color
     self.sun.draw(leds, seconds_past)
-    if weather.is_rainy:
-      for rain_drop in itertools.islice(self.rain_drops, 0, int(weather.is_rainy * len(self.rain_drops))):
-        rain_drop.draw(leds, seconds_past)
-    weather.is_cloudy = 0.5
+    self.moon.draw(leds, seconds_past)
     if weather.is_cloudy:
       for cloud in itertools.islice(self.clouds, 0, int(weather.is_cloudy * len(self.clouds))):
         cloud.draw(leds, seconds_past)
+    if weather.is_rainy:
+      for rain_drop in itertools.islice(self.rain_drops, 0, int(weather.is_rainy * len(self.rain_drops))):
+        rain_drop.draw(leds, seconds_past)
 
 
 presets.PRESETS.append(WeatherPreset())
