@@ -18,10 +18,10 @@ class RGB(object):
     (self.r, self.g, self.b) = (r, g, b)
 
   if config.config['rgb_order'] == 'grb':
-    def __str__(self):
+    def rgb_bytes(self):
       return '{}{}{}'.format(chr(self.g), chr(self.r), chr(self.b))
   elif config.config['rgb_order'] == 'brg':
-    def __str__(self):
+    def rgb_bytes(self):
       return '{}{}{}'.format(chr(self.b), chr(self.r), chr(self.g))
   else:
     raise Exception('rgb_order "{}" is not handled.'.format(config.config['rgb_order']))
@@ -54,7 +54,8 @@ class PresetLedThread(threading.Thread):
           try:
             self.next_update_time = (
               time.time() + self.leds.cur_preset.seconds_per_frame)
-            self.leds.cur_preset.draw(self.leds)
+            self.leds.cur_preset.draw(
+                self.leds, self.leds.cur_preset.seconds_per_frame)
             self.leds.flush()
           except AttributeError as e:
             if self.leds.cur_preset is not None:
@@ -71,16 +72,13 @@ class Pixels(list):
     if start > stop:
       start, stop = stop, start
     start, stop = start % len(self), stop % len(self)
-    assert start < len(self)
-    assert stop > 0
-    if start < 0:
-      self.draw_line(start % len(self), len(self), rgb)
-      start = 0
-    if stop > len(self):
-      self.draw_line(0, stop % len(self), rgb)
+    if stop == 0:
       stop = len(self)
-    istart = max(int(start), 0)
-    istop = min(int(stop), len(self))
+    if start > stop:
+      self.draw_line(0, stop, rgb)
+      self.draw_line(start, len(self), rgb)
+      return
+    istart, istop = int(start), int(stop)
     if istart == istop:
       self[istart] = self[istart].mixed(rgb, stop - start)
     else:  # istop > istart
@@ -148,12 +146,12 @@ class Leds(BaseLeds):
     super(Leds, self).flush()
     msg = ['YNC']
     if self._half_reversed:
-      msg.extend(str(p) for p in itertools.islice(
+      msg.extend(p.rgb_bytes() for p in itertools.islice(
           self.pixels, 0, len(self.pixels) / 2))
-      msg.extend(str(self.pixels[j]) for j in xrange(
+      msg.extend(self.pixels[j].rgb_bytes() for j in xrange(
           len(self.pixels) - 1, len(self.pixels) / 2 - 1, -1))
     else:
-      msg.extend(str(p) for p in self.pixels)
+      msg.extend(p.rgb_bytes() for p in self.pixels)
     msg.append('S')
     self.usb.write(''.join(msg))
     self.usb.flush()

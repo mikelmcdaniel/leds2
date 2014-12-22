@@ -72,8 +72,10 @@ def get_weather(location_id='KSJC', weather_source='noaa'):
     current_weather.celcius = float(weather_com_result['current_conditions']['temperature'])
   return current_weather
 
-def get_seconds(time):
-  seconds = time.tm_hour * 3600 + time.tm_min * 60 + time.tm_sec
+def get_seconds(local_time=None):
+  if local_time is None:
+    local_time = time.localtime()
+  seconds = local_time.tm_hour * 3600 + local_time.tm_min * 60 + local_time.tm_sec
   return float(seconds)
 
 def get_sun_seconds(time):

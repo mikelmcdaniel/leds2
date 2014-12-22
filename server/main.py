@@ -6,6 +6,8 @@ import config
 import led_controller
 import presets
 import presets.weather_presets
+import presets.cars_presets
+
 
 from flask import Flask, request, redirect, render_template, url_for, Response, send_file
 app = Flask(__name__)
