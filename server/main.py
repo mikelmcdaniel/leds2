@@ -5,9 +5,9 @@ import serial
 import config
 import led_controller
 import presets
+import presets.attributes
 import presets.weather_presets
 import presets.cars_presets
-
 
 from flask import Flask, request, redirect, render_template, url_for, Response, send_file
 app = Flask(__name__)
@@ -30,18 +30,27 @@ COLORS = (
 
 @app.route('/', methods=['POST', 'GET'])
 def main():
-  color = request.args.get('color', '')
-  color2 = request.args.get('color2', '')
   preset = request.args.get('preset', '')
-  if color:
-    custom_colors(color)
-  elif preset:
-    preset_colors(preset)
-  elif color2: # and not (color or preset):
-    custom_colors(color2.strip('#'))
+  if preset:
+    set_preset(preset)
+
+  cur_preset = LEDS.cur_preset
+  if cur_preset != None:
+    for key, val in request.args.iteritems():
+      key = presets.attributes.decoded_html_name(key)
+      if key in cur_preset.attributes:
+        cur_preset.attributes[key].set_val(val)
+    cur_preset.draw(LEDS, 0.0)
+    LEDS.flush()
+
+    selectors_html = '<br>'.join(a.selector_html() for a in cur_preset.attributes.itervalues())
+  else:
+    selectors_html = ''
+
   return render_template(
     'main.html', colors=COLORS, presets=PRESETS,
-    host_url=request.url_root, html_colors=get_colors_html())
+    host_url=request.url_root, html_colors=get_colors_html(),
+    selectors_html=selectors_html)
 
 
 @app.route('/favicon.ico')
@@ -49,7 +58,7 @@ def favicon():
   return send_file('static/favicon.ico', mimetype='image/x-icon')
 
 @app.route('/preset/<preset>')
-def preset_colors(preset):
+def set_preset(preset):
   LEDS.set_preset(preset)
   return Response('ok', mimetype='text/plain')
 
@@ -144,4 +153,5 @@ if __name__ == '__main__':
   for preset in presets.PRESETS:
     LEDS.register_preset(preset)
     PRESETS.append((preset.name, preset.name))
+  set_preset('Cars')
   app.run(host='0.0.0.0', port=5000, debug=config.config['debug'], use_reloader=False)

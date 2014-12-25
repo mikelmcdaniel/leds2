@@ -4,19 +4,13 @@
 
 <br>
 <form action="" method="get">
-	<select name="color" onchange="this.form.submit()">
-		<option value="" selected>- color -</option>
-    {% for x in colors %}
-      <option value="{{ x[1] }}">{{ x[0] }}</option>
-    {% endfor %}
-  </select>
-  <input name="color2" type="color" onchange="this.form.submit()"></input>
   <select name="preset" onchange="this.form.submit()">
 		<option value="" selected>- preset -</option>
     {% for x in presets %}
       <option value="{{ x[1] }}">{{ x[0] }}</option>
     {% endfor %}
   </select>
+  {{ selectors_html|safe }}
 </form>
 
 <script>

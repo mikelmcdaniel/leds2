@@ -6,31 +6,10 @@ import threading
 import time
 
 import config
+import colors
 
-def parse_rgb(rgb):
-  return RGB(*(int(rgb[j:j + 2], 16) for j in xrange(0, 6, 2)))
-
-class RGB(object):
-  def __init__(self, r, g, b):
-    r = min(255, max(0, r))
-    g = min(255, max(0, g))
-    b = min(255, max(0, b))
-    (self.r, self.g, self.b) = (r, g, b)
-
-  if config.config['rgb_order'] == 'grb':
-    def rgb_bytes(self):
-      return '{}{}{}'.format(chr(self.g), chr(self.r), chr(self.b))
-  elif config.config['rgb_order'] == 'brg':
-    def rgb_bytes(self):
-      return '{}{}{}'.format(chr(self.b), chr(self.r), chr(self.g))
-  else:
-    raise Exception('rgb_order "{}" is not handled.'.format(config.config['rgb_order']))
-
-  def mixed(self, other, alpha):
-    return RGB(
-        int(alpha * other.r + (1 - alpha) * self.r),
-        int(alpha * other.g + (1 - alpha) * self.g),
-        int(alpha * other.b + (1 - alpha) * self.b))
+parse_rgb = colors.parse_rgb
+RGB = colors.RGB
 
 
 class PresetLedThread(threading.Thread):
@@ -45,7 +24,8 @@ class PresetLedThread(threading.Thread):
     while True:
       if self.leds.cur_preset is not None:
         try:
-          time.sleep(self.next_update_time - time.time())
+          while self.next_update_time > time.time():
+            time.sleep(min(self.next_update_time - time.time(), 0.2))
         except IOError as e:
           if e.errno != 22:  # 22 -> "Invalid Argument"
             raise e
@@ -93,7 +73,7 @@ class Pixels(list):
         if alpha > 0:
           self[istop] = self[istop].mixed(rgb, alpha)
 
-# TODO: Add locking
+# TODO Add locking
 class BaseLeds(object):
   def __init__(self, num_leds, default_color=RGB(127, 127, 127)):
     self.num_leds = num_leds
@@ -111,6 +91,9 @@ class BaseLeds(object):
     if preset_name is None:
       self.cur_preset = None
     else:
+      # TODO Fix next_update_time hack.  If this line is removed than
+      # changing from a pattern with a long sleep will not cause a redraw.
+      self.preset_thread.next_update_time = 0
       self.cur_preset = self.presets[preset_name]
 
   def register_preset(self, preset):
