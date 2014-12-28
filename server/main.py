@@ -8,6 +8,7 @@ import presets
 import presets.attributes
 import presets.weather_presets
 import presets.cars_presets
+import presets.holiday_presets
 
 from flask import Flask, request, redirect, render_template, url_for, Response, send_file
 app = Flask(__name__)
