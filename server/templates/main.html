@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block body %}
-<p id="colors">{{ html_colors }}</p>
+<p id="colors">{{ led_colors }}</p>
 
 <br>
 <form action="" method="get">
@@ -10,12 +10,11 @@
       <option value="{{ x[1] }}">{{ x[0] }}</option>
     {% endfor %}
   </select>
-  {{ selectors_html|safe }}
 </form>
+{{ selectors_html|safe }}
 
 <script>
-function httpGet(theUrl)
-{
+function httpGet(theUrl) {
   var xmlHttp = null;
   xmlHttp = new XMLHttpRequest();
   xmlHttp.open("GET", theUrl, false);
@@ -31,6 +30,9 @@ function updateColors(timeout, num_updates) {
 }
 
 updateColors(100, 600);
+
+
+
 </script>
 
 {% endblock %}

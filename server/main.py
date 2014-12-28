@@ -34,22 +34,26 @@ def main():
   if preset:
     set_preset(preset)
 
-  cur_preset = LEDS.cur_preset
-  if cur_preset != None:
-    for key, val in request.args.iteritems():
-      key = presets.attributes.decoded_html_name(key)
-      if key in cur_preset.attributes:
-        cur_preset.attributes[key].set_val(val)
-    cur_preset.draw(LEDS, 0.0)
+  cur_presets = LEDS.cur_presets
+  if cur_presets:
+    for cur_preset in cur_presets:
+      for key, val in request.args.iteritems():
+        key = presets.attributes.decoded_html_name(key)
+        if key in cur_preset.attributes:
+          cur_preset.attributes[key].set_val(val)
+      cur_preset.draw(LEDS, 0.0)
     LEDS.flush()
 
-    selectors_html = '<br>'.join(a.selector_html() for a in cur_preset.attributes.itervalues())
+    selectors_html = ''.join(
+      '<form action="" method="get">{}</form>'.format(a.selector_html())
+      for cur_preset in cur_presets
+      for a in cur_preset.attributes.itervalues())
   else:
     selectors_html = ''
 
   return render_template(
-    'main.html', colors=COLORS, presets=PRESETS,
-    host_url=request.url_root, html_colors=get_colors_html(),
+    'main.html', presets=PRESETS,
+    host_url=request.url_root, led_colors=get_colors_html(),
     selectors_html=selectors_html)
 
 
@@ -59,7 +63,8 @@ def favicon():
 
 @app.route('/preset/<preset>')
 def set_preset(preset):
-  LEDS.set_preset(preset)
+  preset = preset.split(',')
+  LEDS.set_presets(preset)
   return Response('ok', mimetype='text/plain')
 
 @app.route('/custom/<colors>')

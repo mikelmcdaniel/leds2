@@ -83,7 +83,7 @@ class Cloud(object):
   def draw(self, leds, seconds_past):
     self.pos = (self.pos + self.velocity * seconds_past) % 1.0
     pos = leds.num_leds * self.pos
-    leds.pixels.draw_line(pos - self.width / 2, pos + self.width / 2, led_controller.RGB(80, 80, 80))
+    leds.pixels.draw_line(pos - self.width / 2, pos + self.width / 2, led_controller.RGB(80, 80, 80, 0.5))
 
 
 class RainDrop(object):
@@ -118,12 +118,6 @@ class WeatherPreset(presets.Preset):
 
   def draw(self, leds, seconds_past):
     weather = self.get_weather()
-    if weather.is_sunny:
-      sky_color = led_controller.RGB(30, 30, 100)
-    else:
-      sky_color = led_controller.RGB(20, 20, 20)
-    for j in xrange(leds.num_leds):
-      leds.pixels[j] = sky_color
     self.sun.draw(leds, seconds_past)
     self.moon.draw(leds, seconds_past)
     if weather.is_cloudy:

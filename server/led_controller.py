@@ -22,7 +22,10 @@ class PresetLedThread(threading.Thread):
   # TODO Make this thread re-spawn if it dies.
   def run(self):
     while True:
-      if self.leds.cur_preset is not None:
+      cur_presets = self.leds.cur_presets
+      if cur_presets:
+        seconds_per_frame = min(
+          cur_preset.seconds_per_frame for cur_preset in cur_presets)
         try:
           while self.next_update_time > time.time():
             time.sleep(min(self.next_update_time - time.time(), 0.2))
@@ -30,16 +33,10 @@ class PresetLedThread(threading.Thread):
           if e.errno != 22:  # 22 -> "Invalid Argument"
             raise e
           # Tried to sleep for negative seconds.
-        if self.leds.cur_preset is not None:
-          try:
-            self.next_update_time = (
-              time.time() + self.leds.cur_preset.seconds_per_frame)
-            self.leds.cur_preset.draw(
-                self.leds, self.leds.cur_preset.seconds_per_frame)
-            self.leds.flush()
-          except AttributeError as e:
-            if self.leds.cur_preset is not None:
-              raise e
+        for cur_preset in cur_presets:
+          self.next_update_time = (time.time() + seconds_per_frame)
+          cur_preset.draw(self.leds, seconds_per_frame)
+        self.leds.flush()
       else:
         time.sleep(0.2)
 
@@ -48,30 +45,30 @@ class Pixels(list):
     super(Pixels, self).__init__()
     self.extend(default_color for _ in xrange(num_pixels))
 
-  def draw_line(self, start, stop, rgb):
+  def draw_line(self, start, stop, rgba):
     if start > stop:
       start, stop = stop, start
     start, stop = start % len(self), stop % len(self)
     if stop == 0:
       stop = len(self)
     if start > stop:
-      self.draw_line(0, stop, rgb)
-      self.draw_line(start, len(self), rgb)
+      self.draw_line(0, stop, rgba)
+      self.draw_line(start, len(self), rgba)
       return
     istart, istop = int(start), int(stop)
     if istart == istop:
-      self[istart] = self[istart].mixed(rgb, stop - start)
+      self[istart] = self[istart].mixed(rgba, stop - start)
     else:  # istop > istart
       # first pixel
-      self[istart] = self[istart].mixed(rgb, 1 + math.floor(start) - start)
+      self[istart] = self[istart].mixed(rgba, 1 + math.floor(start) - start)
       # middle pixel(s)
       for j in xrange(istart + 1, istop):
-        self[j] = rgb
+        self[j] = self[j].mixed(rgba, 1.0)
       # last pixel
       if istop < len(self):
         alpha = stop - istop
         if alpha > 0:
-          self[istop] = self[istop].mixed(rgb, alpha)
+          self[istop] = self[istop].mixed(rgba, alpha)
 
 # TODO Add locking
 class BaseLeds(object):
@@ -80,21 +77,24 @@ class BaseLeds(object):
     self.pixels = Pixels(num_leds, default_color)
     self.default_color = default_color
     self.presets = {}
-    self.cur_preset = None
+    self.cur_presets = []
     self.preset_thread = PresetLedThread(self)
     self.preset_thread.daemon = True
     self.preset_thread.start()
     self._last_colors = ['%02x%02x%02x' % (p.r, p.g, p.b) for p in self.pixels]
 
+  def set_presets(self, preset_names):
+    # TODO Fix next_update_time hack.  If this line is removed than
+    # changing from a pattern with a long sleep will not cause a redraw.
+    self.cur_presets = [self.presets[pn] for pn in preset_names]
+    self.preset_thread.next_update_time = 0
+
   def set_preset(self, preset_name):
     "Start a preset (preprogrammed) pattern."
     if preset_name is None:
-      self.cur_preset = None
+      self.set_presets([])
     else:
-      # TODO Fix next_update_time hack.  If this line is removed than
-      # changing from a pattern with a long sleep will not cause a redraw.
-      self.preset_thread.next_update_time = 0
-      self.cur_preset = self.presets[preset_name]
+      self.set_presets([preset_name])
 
   def register_preset(self, preset):
     assert preset.name not in self.presets
