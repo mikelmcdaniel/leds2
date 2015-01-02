@@ -127,7 +127,7 @@ class Leds(BaseLeds):
 
   def flush(self):
     super(Leds, self).flush()
-    msg = ['YNC']
+    msg = []
     if self._half_reversed:
       msg.extend(p.rgb_bytes() for p in itertools.islice(
           self.pixels, 0, len(self.pixels) / 2))
@@ -135,8 +135,10 @@ class Leds(BaseLeds):
           len(self.pixels) - 1, len(self.pixels) / 2 - 1, -1))
     else:
       msg.extend(p.rgb_bytes() for p in self.pixels)
-    msg.append('S')
-    self.usb.write(''.join(msg))
+    msg = ''.join(msg)
+    # Remove any instances of 'YNC' that aren't used to sync.
+    msg = msg.replace('YNC', 'YNB')
+    self.usb.write(''.join(('YNC', msg, 'S')))
     self.usb.flush()
     self.last_update_time = time.time()
 
