@@ -17,11 +17,14 @@ class PresetLedThread(threading.Thread):
     super(PresetLedThread, self).__init__()
     self.leds = leds
     self.next_update_time = 0
+    self.enabled = True
 
   def post_update(self):
     self.next_update_time = 0
 
-  # TODO Add proper locking; this triple-checking code is gross.
+  def set_enabled(self, enabled):
+    self.enabled = enabled
+
   # TODO Make this thread re-spawn if it dies.
   def run(self):
     while True:
@@ -36,10 +39,11 @@ class PresetLedThread(threading.Thread):
           if e.errno != 22:  # 22 -> "Invalid Argument"
             raise e
           # Tried to sleep for negative seconds.
-        for cur_preset in cur_presets:
-          self.next_update_time = (time.time() + seconds_per_frame)
-          cur_preset.draw(self.leds, seconds_per_frame)
-        self.leds.flush()
+        self.next_update_time = (time.time() + seconds_per_frame)
+        if self.enabled:
+          for cur_preset in cur_presets:
+            cur_preset.draw(self.leds, seconds_per_frame)
+          self.leds.flush()
       else:
         time.sleep(0.2)
 
@@ -114,6 +118,7 @@ class BaseLeds(object):
     self.pixels = Pixels(self.num_leds, self.default_color)
 
   def set_power(self, turned_on):
+    self.preset_thread.set_enabled(turned_on)
     self.turned_on = turned_on
 
 class Leds(BaseLeds):
@@ -161,7 +166,8 @@ class Leds(BaseLeds):
     msg = ''.join(msg)
     self.usb.write(''.join(msg))
     self.usb.flush()
-    self.flush()
+    if self.turned_on:
+      self.flush()
 
 class FakeLeds(BaseLeds):
   pass

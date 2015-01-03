@@ -130,7 +130,7 @@ void loop() {
   want = Serial.read();
   if (want != -1) {
     if (want == 'Y') {
-      want = NUM_LEDS * 3 + 2;
+      want = NUM_LEDS * 3 + 3;
       have = 0;
       while (have < want) {
         have += Serial.readBytes((char *)&buffer[have], want - have);
