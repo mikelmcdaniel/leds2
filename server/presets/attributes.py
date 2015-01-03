@@ -41,6 +41,6 @@ class ColorAttribute(Attribute):
 
   def selector_html(self, html_name=None):
     if html_name is None: html_name = self.name
-    return '<input type="color" name="{name}" value="{val}" onchange="this.form.submit()"></input>'.format(
+    return '<input type="color" name="{name}" value="#{val}" defaultValue="#{val}" onchange="this.form.submit()"></input>'.format(
       name=encoded_html_name(self.name), val=self.val.html_color_code())
 

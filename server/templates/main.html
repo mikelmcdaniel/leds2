@@ -4,12 +4,8 @@
 
 <br>
 <form action="" method="get">
-  <select name="preset" onchange="this.form.submit()">
-		<option value="" selected>- preset -</option>
-    {% for x in presets %}
-      <option value="{{ x[1] }}">{{ x[0] }}</option>
-    {% endfor %}
-  </select>
+  <!-- this.checked=true is a hack to force the parameter to appear in the GET request. -->
+  <input type="checkbox" name="set_power" autofocus value="{{ 'false' if turned_on else 'true' }}" {{ 'checked' if turned_on else '' }} onchange="this.checked=true; this.form.submit()">Set Power</input>
 </form>
 {{ selectors_html|safe }}
 
@@ -29,7 +25,7 @@ function updateColors(timeout, num_updates) {
   }
 }
 
-updateColors(100, 600);
+updateColors(100, 1800);
 
 
 

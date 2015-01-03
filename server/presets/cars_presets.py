@@ -35,7 +35,7 @@ class Car(object):
     elif self.x > 1:
       self.x = 2 - self.x
       self.xv *= -1
-    self.color += self.xv * 1000 * seconds_past
+    self.color = (self.color + int(self.xv * 1000 * seconds_past)) % 1536
 
 
 class Cars(presets.Preset):

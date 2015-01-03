@@ -39,6 +39,8 @@ class PresetLedThread(threading.Thread):
           if e.errno != 22:  # 22 -> "Invalid Argument"
             raise e
           # Tried to sleep for negative seconds.
+        # If the cur_presets have changed underneath us, restart this iteration.
+        if self.leds.cur_presets != cur_presets: continue
         self.next_update_time = (time.time() + seconds_per_frame)
         if self.enabled:
           for cur_preset in cur_presets:
@@ -94,13 +96,6 @@ class BaseLeds(object):
   def set_presets(self, preset_names):
     self.cur_presets = [self.presets[pn] for pn in preset_names]
     self.preset_thread.post_update()
-
-  def set_preset(self, preset_name):
-    "Start a preset (preprogrammed) pattern."
-    if preset_name is None:
-      self.set_presets([])
-    else:
-      self.set_presets([preset_name])
 
   def register_preset(self, preset):
     assert preset.name not in self.presets

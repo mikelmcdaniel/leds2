@@ -31,30 +31,42 @@ COLORS = (
 
 @app.route('/', methods=['POST', 'GET'])
 def main():
-  preset = request.args.get('preset', '')
-  if preset:
-    set_preset(preset)
+  preset_list = request.args.get('presets', '')
+  if preset_list:
+    set_presets(preset_list)
 
-  cur_presets = LEDS.cur_presets
-  if cur_presets:
-    for cur_preset in cur_presets:
-      for key, val in request.args.iteritems():
-        key = presets.attributes.decoded_html_name(key)
-        if key in cur_preset.attributes:
-          cur_preset.attributes[key].set_val(val)
-      cur_preset.draw(LEDS, 0.0)
-    LEDS.flush()
+  turned_on = request.args.get('set_power', '')
+  if turned_on:
+    set_power(turned_on)
 
-    selectors_html = ''.join(
-      '<form action="" method="get">{}</form>'.format(a.selector_html())
-      for cur_preset in cur_presets
-      for a in cur_preset.attributes.itervalues())
-  else:
-    selectors_html = ''
+  for preset in presets.PRESETS:
+    for key, val in request.args.iteritems():
+      key = presets.attributes.decoded_html_name(key)
+      if key in preset.attributes:
+        preset.attributes[key].set_val(val)
+
+  selectors_html = []
+  cur_preset_names = [preset.name for preset in LEDS.cur_presets]
+  for preset in presets.PRESETS:
+    new_preset_names = list(cur_preset_names)
+    if preset.name in cur_preset_names:
+      checked = 'checked'
+      new_preset_names.remove(preset.name)
+    else:
+      checked = ''
+      new_preset_names.append(preset.name)
+    new_preset_names = ','.join(new_preset_names)
+    selectors_html.append('<div>\n')
+    selectors_html.append(preset.name)
+    selectors_html.append('\t<form action="" method="get"><input type="checkbox" name="presets" autofocus value="{new_presets}" {checked} onchange="this.checked=true; this.form.submit()"></input></form>\n'.format(new_presets=new_preset_names, checked=checked))
+    for a in preset.attributes.itervalues():
+      selectors_html.append('\t<form action="" method="get">{}</form>\n'.format(a.selector_html()))
+    selectors_html.append('</div>\n')
+  selectors_html = ''.join(selectors_html)
 
   return render_template(
     'main.html', presets=PRESETS,
-    host_url=request.url_root, led_colors=get_colors_html(),
+    host_url=request.url_root, led_colors=get_colors_html(), turned_on=LEDS.turned_on,
     selectors_html=selectors_html)
 
 
@@ -64,21 +76,21 @@ def favicon():
 
 @app.route('/set_power/<turned_on>')
 def set_power(turned_on):
-  turned_on = bool(int(turned_on))
+  turned_on = turned_on not in ('0', 0, False, 'off', 'false', 'False')
   LEDS.set_power(turned_on)
   return Response('ok', mimetype='text/plain')
 
-@app.route('/preset/<preset>')
-def set_preset(preset):
-  preset = preset.split(',')
-  LEDS.set_presets(preset)
+@app.route('/presets/<presets>')
+def set_presets(presets):
+  presets = presets.replace('%2C', ',').split(',')
+  LEDS.set_presets(presets)
   return Response('ok', mimetype='text/plain')
 
 @app.route('/custom/<colors>')
 def custom_colors(colors='ff000000ff000000ff'):
   num_colors = len(colors) / 6
   assert num_colors <= NUM_LEDS
-  LEDS.set_preset(None)
+  LEDS.set_presets(None)
   LEDS.default_color = led_controller.parse_rgb(colors[0:6])
   for j in xrange(num_colors):
     LEDS.pixels[j] = led_controller.parse_rgb(colors[j * 6:j * 6 + 6])
@@ -110,10 +122,10 @@ def get_colors_html():
 @app.route('/help')
 def help():
   help_msg = '''The following endpoints are supported URLs (regex):
-<site>/preset/[0-8]
-Starts one of the preset programs.
+<site>/presets/[A-Za-z ,]+
+Starts one of the presets programs.
 
-<site>/set_power/[0-1]
+<site>/set_power/(on|off)
 Set the power of the led strips to be on (1) or off (0).
 
 <site>/custom/([0-9a-z]{6})+
@@ -167,6 +179,6 @@ if __name__ == '__main__':
     LEDS = led_controller.FakeLeds(NUM_LEDS)
   for preset in presets.PRESETS:
     LEDS.register_preset(preset)
-    PRESETS.append((preset.name, preset.name))
-  set_preset('Solid Color')
+    PRESETS.append(preset.name)
+  set_presets('Solid Color,Cars')
   app.run(host='0.0.0.0', port=5000, debug=config.config['debug'], use_reloader=False)
