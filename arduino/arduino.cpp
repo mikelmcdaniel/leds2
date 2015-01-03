@@ -105,8 +105,16 @@ void setup() {
 	int j;
   Serial.begin(115200);
 
+  // LEDs
   pinMode(9, OUTPUT);
   pinMode(11, OUTPUT);
+
+  // LED Power
+  pinMode(2, OUTPUT);
+  pinMode(3, OUTPUT);
+  digitalWrite(2, LOW);
+  digitalWrite(3, LOW);
+
 
   // initialize pixels to random, dim color
 	for (j = 3 * NUM_LEDS - 1; j >= 0 ; j--) {
@@ -128,7 +136,20 @@ void loop() {
         have += Serial.readBytes((char *)&buffer[have], want - have);
       }
       if (buffer[0] == 'N' && buffer[1] == 'C') {
-        send_pixels(&pixels[0]);
+        if (buffer[2] == 'Y' && buffer[3] == 'N' && buffer[4] == 'C' && buffer[5] == 'P') {
+          if (buffer[6] == '0') {
+            digitalWrite(2, LOW);
+            digitalWrite(3, LOW);
+          } else if (buffer[6] == '1') {
+            digitalWrite(2, HIGH);
+            digitalWrite(3, HIGH);
+          } else {
+            digitalWrite(2, LOW);
+            digitalWrite(3, HIGH);
+          }
+        } else {
+          send_pixels(&pixels[0]);
+        }
       } else {
         while (Serial.read() != 'S');
       }

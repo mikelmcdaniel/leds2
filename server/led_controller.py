@@ -18,6 +18,9 @@ class PresetLedThread(threading.Thread):
     self.leds = leds
     self.next_update_time = 0
 
+  def post_update(self):
+    self.next_update_time = 0
+
   # TODO Add proper locking; this triple-checking code is gross.
   # TODO Make this thread re-spawn if it dies.
   def run(self):
@@ -82,12 +85,11 @@ class BaseLeds(object):
     self.preset_thread.daemon = True
     self.preset_thread.start()
     self._last_colors = ['%02x%02x%02x' % (p.r, p.g, p.b) for p in self.pixels]
+    self.turned_on = False
 
   def set_presets(self, preset_names):
-    # TODO Fix next_update_time hack.  If this line is removed than
-    # changing from a pattern with a long sleep will not cause a redraw.
     self.cur_presets = [self.presets[pn] for pn in preset_names]
-    self.preset_thread.next_update_time = 0
+    self.preset_thread.post_update()
 
   def set_preset(self, preset_name):
     "Start a preset (preprogrammed) pattern."
@@ -111,6 +113,8 @@ class BaseLeds(object):
     "Reset (i.e. power-cycle) the LED controller."
     self.pixels = Pixels(self.num_leds, self.default_color)
 
+  def set_power(self, turned_on):
+    self.turned_on = turned_on
 
 class Leds(BaseLeds):
   def __init__(self, usb_device_file, num_leds, *args, **kwargs):
@@ -138,7 +142,8 @@ class Leds(BaseLeds):
     msg = ''.join(msg)
     # Remove any instances of 'YNC' that aren't used to sync.
     msg = msg.replace('YNC', 'YNB')
-    self.usb.write(''.join(('YNC', msg, 'S')))
+    msg = ''.join(('YNC', msg, 'S'))
+    self.usb.write(msg)
     self.usb.flush()
     self.last_update_time = time.time()
 
@@ -147,6 +152,16 @@ class Leds(BaseLeds):
     self.usb.close()
     self._init_usb()
 
+  def set_power(self, turned_on):
+    super(Leds, self).set_power(turned_on)
+    msg = ['YNCYNCP']
+    msg.append('1' if turned_on else '0')
+    msg.append('-' * (len(self.pixels) * 3 + len('SYNC') - len('YNCYNCP') - len('0') - len('S')))
+    msg.append('S')
+    msg = ''.join(msg)
+    self.usb.write(''.join(msg))
+    self.usb.flush()
+    self.flush()
 
 class FakeLeds(BaseLeds):
   pass

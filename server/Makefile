@@ -7,3 +7,6 @@ debug:
 prod:
 	sudo -b -g dialout nohup python2 main.py prod
 
+prod_term:
+	sudo -g dialout python2 main.py prod
+

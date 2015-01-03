@@ -62,6 +62,12 @@ def main():
 def favicon():
   return send_file('static/favicon.ico', mimetype='image/x-icon')
 
+@app.route('/set_power/<turned_on>')
+def set_power(turned_on):
+  turned_on = bool(int(turned_on))
+  LEDS.set_power(turned_on)
+  return Response('ok', mimetype='text/plain')
+
 @app.route('/preset/<preset>')
 def set_preset(preset):
   preset = preset.split(',')
@@ -106,6 +112,9 @@ def help():
   help_msg = '''The following endpoints are supported URLs (regex):
 <site>/preset/[0-8]
 Starts one of the preset programs.
+
+<site>/set_power/[0-1]
+Set the power of the led strips to be on (1) or off (0).
 
 <site>/custom/([0-9a-z]{6})+
 Sets all the colors by repeating the html-color codes.
@@ -159,5 +168,5 @@ if __name__ == '__main__':
   for preset in presets.PRESETS:
     LEDS.register_preset(preset)
     PRESETS.append((preset.name, preset.name))
-  set_preset('Cars')
+  set_preset('Solid Color')
   app.run(host='0.0.0.0', port=5000, debug=config.config['debug'], use_reloader=False)
