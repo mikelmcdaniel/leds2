@@ -6,9 +6,7 @@ import config
 import led_controller
 import presets
 import presets.attributes
-import presets.weather_presets
-import presets.cars_presets
-import presets.holiday_presets
+import presets.all_presets
 
 from flask import Flask, request, redirect, render_template, url_for, Response, send_file
 app = Flask(__name__)
@@ -17,17 +15,6 @@ USB_FILE_NAME = config.config['usb_file_name']
 NUM_LEDS = config.config['num_leds']
 
 PRESETS = []
-COLORS = (
-  ('red', 'ff0000'),
-  ('orange', 'ff1900'),
-  ('yellow', 'ff5500'),
-  ('green', '00ff00'),
-  ('teal', '00ff88'),
-  ('blue', '0000ff'),
-  ('purple', 'ff00bb'),
-  ('gray', '7f7f7f'),
-  ('mellow', 'ee3311'),
-)
 
 @app.route('/', methods=['POST', 'GET'])
 def main():

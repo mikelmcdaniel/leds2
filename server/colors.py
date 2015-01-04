@@ -13,11 +13,10 @@ def parse_rgb(color_str):
 
 class RGBA(object):
   def __init__(self, r, g, b, a=1.0):
-    r = min(255, max(0, r))
-    g = min(255, max(0, g))
-    b = min(255, max(0, b))
-    a = min(1, max(0, a))
-    (self.r, self.g, self.b, self.a) = (r, g, b, a)
+    self.r = r % 256
+    self.g = g % 256
+    self.b = b % 256
+    self.a = a % 1.0
 
   def html_color_code(self):
     return '%02x%02x%02x' % (self.r, self.g, self.b)
