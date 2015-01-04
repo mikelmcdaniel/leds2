@@ -34,9 +34,9 @@ class IntAttribute(Attribute):
 
 
 class ColorAttribute(Attribute):
-  def __init__(self, name, *args, **kwargs):
+  def __init__(self, name, default_val=colors.RGB(0xee, 0x55, 0x22), *args, **kwargs):
     super(ColorAttribute, self).__init__(
-      name, default_val=colors.RGB(64, 64, 64), parser=colors.parse_color,
+      name, default_val=default_val, parser=colors.parse_color,
       *args, **kwargs)
 
   def selector_html(self, html_name=None):

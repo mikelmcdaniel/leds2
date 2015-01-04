@@ -16,7 +16,7 @@ class RGBA(object):
     self.r = r % 256
     self.g = g % 256
     self.b = b % 256
-    self.a = a % 1.0
+    self.a = a
 
   def html_color_code(self):
     return '%02x%02x%02x' % (self.r, self.g, self.b)
