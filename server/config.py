@@ -13,8 +13,7 @@ configs = (
   },
   {
     'name': 'living_room',
-    # 'usb_file_name': '/dev/serial/by-id/usb-Arduino__www.arduino.cc__0043_95232343833351603170-if00',
-    'usb_file_name': '/dev/serial/by-id/usb-Arduino__www.arduino.cc__0043_75335313137351306281-if00',
+    'usb_file_name': '/dev/serial/by-id/usb-Arduino__www.arduino.cc__0043_95232343833351603170-if00',
     'board_tag': 'uno',
     'half_reversed': 1,
     'rgb_order': 'brg',
