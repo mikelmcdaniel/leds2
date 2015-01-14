@@ -7,14 +7,21 @@ import led_controller
 import presets
 import presets.attributes
 import presets.all_presets
+import presets.preset_thread
 
 from flask import Flask, request, redirect, render_template, url_for, Response, send_file
 app = Flask(__name__)
 
-USB_FILE_NAME = config.config['usb_file_name']
-NUM_LEDS = config.config['num_leds']
-
-PRESETS = []
+class Globals(object):
+  def __init__(self, debug):
+    self.usb_file_name = config.config['usb_file_name']
+    self.num_leds = config.config['num_leds']
+    self.presets = []
+    if debug:
+      self.leds = led_controller.FakeLeds(self.num_leds)
+    else:
+      self.leds = led_controller.Leds(self.usb_file_name, self.num_leds)
+    self.preset_thread = presets.preset_thread.PresetLedThread(self.leds)
 
 @app.route('/', methods=['POST', 'GET'])
 def main():
@@ -33,7 +40,7 @@ def main():
         preset.attributes[key].set_val(val)
 
   selectors_html = []
-  cur_preset_names = [preset.name for preset in LEDS.cur_presets]
+  cur_preset_names = [preset.name for preset in GLOBALS.preset_thread.cur_presets]
   for preset in presets.PRESETS:
     new_preset_names = list(cur_preset_names)
     if preset.name in cur_preset_names:
@@ -52,8 +59,8 @@ def main():
   selectors_html = ''.join(selectors_html)
 
   return render_template(
-    'main.html', presets=PRESETS,
-    host_url=request.url_root, led_colors=get_colors_html(), turned_on=LEDS.turned_on,
+    'main.html', presets=GLOBALS.presets,
+    host_url=request.url_root, led_colors=get_colors_html(), turned_on=GLOBALS.leds.turned_on,
     selectors_html=selectors_html)
 
 
@@ -64,45 +71,24 @@ def favicon():
 @app.route('/set_power/<turned_on>')
 def set_power(turned_on):
   turned_on = turned_on not in ('0', 0, False, 'off', 'false', 'False')
-  LEDS.set_power(turned_on)
+  GLOBALS.preset_thread.set_enabled(turned_on)
+  GLOBALS.leds.set_power(turned_on)
   return Response('ok', mimetype='text/plain')
 
 @app.route('/presets/<presets>')
 def set_presets(presets):
   presets = presets.replace('%2C', ',').split(',')
-  LEDS.set_presets(presets)
-  return Response('ok', mimetype='text/plain')
-
-@app.route('/custom/<colors>')
-def custom_colors(colors='ff000000ff000000ff'):
-  num_colors = len(colors) / 6
-  assert num_colors <= NUM_LEDS
-  LEDS.set_presets(None)
-  LEDS.default_color = led_controller.parse_rgb(colors[0:6])
-  for j in xrange(num_colors):
-    LEDS.pixels[j] = led_controller.parse_rgb(colors[j * 6:j * 6 + 6])
-  for j in xrange(num_colors, NUM_LEDS):
-    LEDS.pixels[j] = LEDS.pixels[j % num_colors]
-  LEDS.flush()
-  return Response('ok', mimetype='text/plain')
-
-@app.route('/set_color/<offset>/<color>')
-def set_color(offset='0', color='ff0000'):
-  offset = int(offset)
-  assert offset >= 0
-  assert offset < LEDS.num_leds
-  LEDS.pixels[offset] = led_controller.parse_rgb(color)
-  LEDS.flush()
+  GLOBALS.preset_thread.set_presets(presets)
   return Response('ok', mimetype='text/plain')
 
 @app.route('/get_colors')
 def get_colors():
-  return Response(' '.join(LEDS.get_colors()), mimetype='text/plain')
+  return Response(' '.join(GLOBALS.leds.get_colors()), mimetype='text/plain')
 
 @app.route('/get_colors_html')
 def get_colors_html():
   html = []
-  for color in LEDS.get_colors():
+  for color in GLOBALS.leds.get_colors():
     html.append('<span style="background:#{color}">&nbsp;&nbsp;&nbsp;&nbsp;</span>'.format(color=color))
   return Response('\n'.join(html), mimetype='text/plain')
 
@@ -114,13 +100,6 @@ Starts one of the presets programs.
 
 <site>/set_power/(on|off)
 Set the power of the led strips to be on (1) or off (0).
-
-<site>/custom/([0-9a-z]{6})+
-Sets all the colors by repeating the html-color codes.
-ex: <site>/custom/ff00000000ff sets all leds to red, blue, red, blue, etc.
-
-<site>/set_color/[0-9]+/[0-9a-z]{6}
-Set a specific led color according to an html-color code
 
 <site>/get_colors
 Returns a list of space-delimited html-color codes representing the current colors of all the leds.
@@ -141,7 +120,7 @@ Quits the server (calls exit(0)).
 
 @app.route('/reset')
 def reset():
-  LEDS.reset()
+  GLOBALS.leds.reset()
   return Response('ok', mimetype='text/plain')
 
 @app.route('/ping')
@@ -160,12 +139,11 @@ if __name__ == '__main__':
     exit(1)
   elif argv[1] == 'prod':
     config.config['debug'] = False
-    LEDS = led_controller.Leds(USB_FILE_NAME, NUM_LEDS)
   elif argv[1] == 'debug':
     config.config['debug'] = True
-    LEDS = led_controller.FakeLeds(NUM_LEDS)
+  GLOBALS = Globals(config.config['debug'])
   for preset in presets.PRESETS:
-    LEDS.register_preset(preset)
-    PRESETS.append(preset.name)
+    GLOBALS.preset_thread.register_preset(preset)
+    GLOBALS.presets.append(preset.name)
   set_presets('Solid Color,Cars')
   app.run(host='0.0.0.0', port=5000, debug=config.config['debug'], use_reloader=False)
