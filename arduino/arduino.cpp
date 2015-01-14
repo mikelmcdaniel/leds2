@@ -8,7 +8,7 @@
 #define OUT_BYTE (OUT_BYTE1 | OUT_BYTE2)
 
 // global pixels array
-uint8_t buffer[NUM_LEDS * 3 + 2];
+uint8_t buffer[NUM_LEDS * 3 + 3 + 2]; // 'NC' + check_sum + 'S'
 uint8_t * pixels = &buffer[2];
 
 void ws2811_send_pixels(const uint8_t* pixels24,
@@ -126,16 +126,25 @@ void setup() {
 void loop() {
   static uint16_t count = 0;
   int16_t want, have, pos;
+  uint16_t check_sum;
+  int j;
 
   want = Serial.read();
   if (want != -1) {
+    count = 0;
     if (want == 'Y') {
-      want = NUM_LEDS * 3 + 3;
+      want = sizeof(buffer);
       have = 0;
       while (have < want) {
         have += Serial.readBytes((char *)&buffer[have], want - have);
       }
       if (buffer[0] == 'N' && buffer[1] == 'C') {
+        check_sum = 0;
+        for (j = 2; j < 2 + NUM_LEDS * 3; j++) {
+          check_sum += *(uint8_t *)&buffer[j];
+        }
+        // If the calculated check_sum doesn't match, return.
+        if (check_sum != 256 * (uint16_t)*(uint8_t *)&buffer[2 + NUM_LEDS * 3 + 1] + *(uint8_t *)&buffer[2 + NUM_LEDS * 3]) return;
         if (buffer[2] == 'Y' && buffer[3] == 'N' && buffer[4] == 'C' && buffer[5] == 'P') {
           if (buffer[6] == '0') {
             digitalWrite(2, LOW);

@@ -50,6 +50,21 @@ class Leds(BaseLeds):
     self.usb = serial.Serial(
       port=self.usb_device_file, baudrate=115200, timeout=100, writeTimeout=0)
 
+  def _write_data(self, msg):
+    check_sum = sum(ord(c) for c in msg)
+    parts = ['YNC']
+    parts.append(msg)
+    parts.append(chr(check_sum % 256))
+    parts.append(chr(check_sum / 256 % 256))
+    parts.append('S')
+    msg_data = ''.join(parts)
+    delay_time = self.last_update_time + 0.005 - time.time()
+    if delay_time > 0:
+      time.sleep(delay_time)
+    self.usb.write(msg_data)
+    self.usb.flush()
+    self.last_update_time = time.time()
+
   def flush(self):
     super(Leds, self).flush()
     msg = []
@@ -60,16 +75,9 @@ class Leds(BaseLeds):
           len(self.pixels) - 1, len(self.pixels) / 2 - 1, -1))
     else:
       msg.extend(p.rgb_bytes() for p in self.pixels)
-    msg = ''.join(msg)
-    # Remove any instances of 'YNC' that aren't used to sync.
-    msg = msg.replace('YNC', 'YNB')
-    msg = ''.join(('YNC', msg, 'S'))
-    delay_time = self.last_update_time + 0.005 - time.time()
-    if delay_time > 0:
-      time.sleep(delay_time)
-    self.usb.write(msg)
-    self.usb.flush()
-    self.last_update_time = time.time()
+    # Remove accidental occurences of 'YNC' to avoid SYNCing issues
+    msg = ''.join(msg).replace('YNC', 'XMB')
+    self._write_data(msg)
 
   def reset(self):
     super(Leds, self).reset()
@@ -78,17 +86,11 @@ class Leds(BaseLeds):
 
   def set_power(self, turned_on):
     super(Leds, self).set_power(turned_on)
-    msg = ['YNCYNCP']
+    msg = ['YNCP']
     msg.append('1' if turned_on else '0')
-    msg.append('-' * (len(self.pixels) * 3 + len('SYNC') - len('YNCYNCP') - len('0') - len('S')))
-    msg.append('S')
+    msg.append('-' * (len(self.pixels) * 3 - len('YNCP') - len('0')))
     msg = ''.join(msg)
-    delay_time = self.last_update_time + 0.005 - time.time()
-    if delay_time > 0:
-      time.sleep(delay_time)
-    self.usb.write(''.join(msg))
-    self.usb.flush()
-    self.last_update_time = time.time()
+    self._write_data(msg)
     if self.turned_on:
       self.flush()
 
