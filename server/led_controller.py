@@ -64,6 +64,9 @@ class Leds(BaseLeds):
     # Remove any instances of 'YNC' that aren't used to sync.
     msg = msg.replace('YNC', 'YNB')
     msg = ''.join(('YNC', msg, 'S'))
+    delay_time = self.last_update_time + 0.01 - time.time()
+    if delay_time > 0:
+      time.sleep(delay_time)
     self.usb.write(msg)
     self.usb.flush()
     self.last_update_time = time.time()
@@ -80,8 +83,12 @@ class Leds(BaseLeds):
     msg.append('-' * (len(self.pixels) * 3 + len('SYNC') - len('YNCYNCP') - len('0') - len('S')))
     msg.append('S')
     msg = ''.join(msg)
+    delay_time = self.last_update_time + 0.01 - time.time()
+    if delay_time > 0:
+      time.sleep(delay_time)
     self.usb.write(''.join(msg))
     self.usb.flush()
+    self.last_update_time = time.time()
     if self.turned_on:
       self.flush()
 
