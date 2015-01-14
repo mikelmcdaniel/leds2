@@ -6,6 +6,7 @@ class PresetLedThread(threading.Thread):
     super(PresetLedThread, self).__init__()
     self.daemon = True
     self.leds = leds
+    self.last_update_time = 0
     self.next_update_time = 0
     self.presets = {}
     self.cur_presets = []
@@ -13,7 +14,7 @@ class PresetLedThread(threading.Thread):
     self.start()
 
   def post_update(self):
-    self.next_update_time = 0
+    self.next_update_time = time.time()
 
   def set_enabled(self, enabled):
     self.enabled = enabled
@@ -30,7 +31,7 @@ class PresetLedThread(threading.Thread):
   def run(self):
     while True:
       cur_presets = self.cur_presets
-      if cur_presets:
+      if cur_presets and self.enabled:
         seconds_per_frame = min(
           cur_preset.seconds_per_frame for cur_preset in cur_presets)
         try:
@@ -42,10 +43,15 @@ class PresetLedThread(threading.Thread):
           # Tried to sleep for negative seconds.
         # If the cur_presets have changed underneath us, restart this iteration.
         if self.cur_presets != cur_presets: continue
-        self.next_update_time = (time.time() + seconds_per_frame)
+        now = time.time()
+        self.next_update_time = (now + seconds_per_frame)
         if self.enabled:
+          # Attempt to keep track of the number of seconds_past since the last
+          # update.  However, bound it between 0 and 3 * seconds_per_frame.
+          seconds_past = min(max(now - self.last_update_time, 0), 3 * seconds_per_frame)
+          self.last_update_time = now
           for cur_preset in cur_presets:
-            cur_preset.draw(self.leds.pixels, seconds_per_frame)
+            cur_preset.draw(self.leds.pixels, seconds_past)
           self.leds.flush()
       else:
         time.sleep(0.2)

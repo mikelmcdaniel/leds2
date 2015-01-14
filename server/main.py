@@ -33,11 +33,15 @@ def main():
   if turned_on:
     set_power(turned_on)
 
+  should_post_update = False
   for preset in presets.PRESETS:
     for key, val in request.args.iteritems():
       key = presets.attributes.decoded_html_name(key)
       if key in preset.attributes:
         preset.attributes[key].set_val(val)
+        should_post_update = True
+  if should_post_update:
+    GLOBALS.preset_thread.post_update()
 
   selectors_html = []
   cur_preset_names = [preset.name for preset in GLOBALS.preset_thread.cur_presets]
