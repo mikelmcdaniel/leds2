@@ -45,14 +45,14 @@ class Cars(presets.Preset):
     self.num_cars = attributes.IntAttribute('num_cars', 10)
     self.attributes['num_cars'] = self.num_cars
 
-  def draw(self, leds, seconds_past):
+  def draw(self, pixels, seconds_past):
     self.cars.extend(
-      Car(random.random() * len(leds.pixels), 0.01 + random.random() * 0.01, random.randint(0, 1535))
+      Car(random.random() * len(pixels), 0.01 + random.random() * 0.01, random.randint(0, 1535))
       for _ in xrange(self.num_cars.val - len(self.cars)))
     for car in itertools.islice(self.cars, 0, self.num_cars.val):
       car.iterate(seconds_past)
-      x = car.x * leds.num_leds
-      leds.pixels.draw_line(x - 1, x + 1, rainbow_color(car.color))
+      x = car.x * len(pixels)
+      pixels.draw_line(x - 1, x + 1, rainbow_color(car.color))
 
 
 presets.PRESETS.append(Cars())

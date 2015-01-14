@@ -11,7 +11,7 @@ class Preset(object):
     self.seconds_per_frame = seconds_per_frame
     self.attributes = {}
 
-  def draw(self, leds, seconds_past):
+  def draw(self, pixels, seconds_past):
     raise NotImplementedError()
 
 
@@ -23,8 +23,8 @@ class SolidColorPreset(Preset):
     self.color = attributes.ColorAttribute('color')
     self.attributes['color'] = self.color
 
-  def draw(self, leds, seconds_past):
-    for j in xrange(len(leds.pixels)):
-      leds.pixels[j] = self.color.val
+  def draw(self, pixels, seconds_past):
+    for j in xrange(len(pixels)):
+      pixels[j] = self.color.val
 
 PRESETS.append(SolidColorPreset())

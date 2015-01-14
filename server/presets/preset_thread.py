@@ -45,7 +45,7 @@ class PresetLedThread(threading.Thread):
         self.next_update_time = (time.time() + seconds_per_frame)
         if self.enabled:
           for cur_preset in cur_presets:
-            cur_preset.draw(self.leds, seconds_per_frame)
+            cur_preset.draw(self.leds.pixels, seconds_per_frame)
           self.leds.flush()
       else:
         time.sleep(0.2)
