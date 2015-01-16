@@ -17,7 +17,6 @@ RGB = colors.RGB
 # TODO Add locking
 class BaseLeds(object):
   def __init__(self, num_leds, default_color=RGB(127, 127, 127)):
-    self.num_leds = num_leds
     self.pixels = pixels.Pixels(num_leds, default_color)
     self.default_color = default_color
     self._last_colors = ['%02x%02x%02x' % (p.r, p.g, p.b) for p in self.pixels]
@@ -32,7 +31,7 @@ class BaseLeds(object):
 
   def reset(self):
     "Reset (i.e. power-cycle) the LED controller."
-    self.pixels = pixels.Pixels(self.num_leds, self.default_color)
+    self.pixels = pixels.Pixels(len(self.pixels), self.default_color)
 
   def set_power(self, turned_on):
     self.turned_on = turned_on

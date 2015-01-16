@@ -102,8 +102,8 @@ def help():
 <site>/presets/[A-Za-z ,]+
 Starts one of the presets programs.
 
-<site>/set_power/(on|off)
-Set the power of the led strips to be on (1) or off (0).
+<site>/set_power/(on|off|true|false|True|False|1|0)
+Set the power of the led strips to be on or off.
 
 <site>/get_colors
 Returns a list of space-delimited html-color codes representing the current colors of all the leds.
