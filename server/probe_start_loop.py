@@ -37,8 +37,7 @@ def main(argv):
   debug = True if argv[1] == 'debug' else False
   st = ServerThread(debug)
   while True:
-    print 'foo'
-    if True or not attempt_ping():
+    if not attempt_ping():
       st.kill_server()
       st = ServerThread(debug)
       time.sleep(5)
