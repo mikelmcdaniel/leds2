@@ -74,7 +74,7 @@ class ExplosionBit(object):
     elif self.x > 1:
       self.x = 2 - self.x
       self.xv *= -1
-    self.color = (self.color + int(400 * seconds_past)) % 1536
+    self.color = (self.color + int(1000 * seconds_past)) % 1536
 
 
 class ExplodingCars(presets.Preset):
@@ -82,11 +82,12 @@ class ExplodingCars(presets.Preset):
     super(ExplodingCars, self).__init__(name)
     self.cars = []
     self.explosion_bits = []
-    self.num_exploding_cars = attributes.IntAttribute('num_exploding_cars', 10)
+    self.num_exploding_cars = attributes.IntAttribute('num_exploding_cars', 5)
     self.attributes['num_exploding_cars'] = self.num_exploding_cars
 
   def draw(self, pixels, seconds_past):
     num_cars = self.num_exploding_cars.val
+    now = time.time()
     self.cars.extend(
       Car(0, 0.01 + random.random() * 0.01, random.randint(0, 1535))
       for _ in xrange(num_cars - len(self.cars)))
@@ -97,7 +98,7 @@ class ExplodingCars(presets.Preset):
       for k, car_k in enumerate(itertools.islice(self.cars, j + 1, num_cars), j + 1):
         # if there is a collision:
         if (car_j.x - car_k.x) * (car_j.x + seconds_past * car_j.xv - car_k.x - seconds_past * car_k.xv) < 0:
-          self.explosion_bits.extend(ExplosionBit(car_k.x, 0.1 * (-1 + 2 * random.random()), car_k.color, time.time() + 0.1 + random.random()) for _ in xrange(5))
+          self.explosion_bits.extend(ExplosionBit(car_k.x, 0.05 * (-1 + 2 * random.random()), car_k.color, now + 0.1 + random.random()) for _ in xrange(5))
           self.cars[k] = self.cars[-1]
           self.cars.pop()
           break
@@ -106,10 +107,17 @@ class ExplodingCars(presets.Preset):
       car.iterate(seconds_past)
       x = car.x * len(pixels)
       pixels.draw_line(x - 1, x + 1, rainbow_color(car.color))
+    j = 0
+    while j < len(self.explosion_bits):
+      if self.explosion_bits[j].ttl < now:
+        self.explosion_bits[j] = self.explosion_bits[-1]
+        self.explosion_bits.pop()
+      else:
+        j += 1
     for bit in self.explosion_bits:
       bit.iterate(seconds_past)
       x = bit.x * len(pixels)
-      pixels.draw_line(x - 0.2, x + 0.2, rainbow_color(bit.color, 0.5))
+      pixels.draw_line(x - 0.4, x + 0.4, rainbow_color(bit.color, 0.5))
 
 
 presets.PRESETS.append(ExplodingCars())
