@@ -1,7 +1,7 @@
 import colors
 
 class Pixels(list):
-  def __init__(self, num_pixels, default_color=colors.RGB(0xee, 0x33, 0x11)):
+  def __init__(self, num_pixels, default_color=colors.RGB(0xcc, 0x45, 0x18)):
     super(Pixels, self).__init__()
     self.extend(default_color for _ in xrange(num_pixels))
 
