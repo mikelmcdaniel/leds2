@@ -42,8 +42,7 @@ def main(argv):
       st.kill_server()
       st = ServerThread(debug)
       time.sleep(5)
-    time.sleep(1)
-    # time.sleep(120 + random.random() * 60)
+    time.sleep(120 + random.random() * 60)
 
 if __name__ == '__main__':
   main(sys.argv)
