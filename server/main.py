@@ -2,6 +2,7 @@ from sys import argv, exit
 from time import sleep
 import serial
 
+import colors
 import config
 import led_controller
 import presets
@@ -83,6 +84,19 @@ def set_power(turned_on):
 def set_presets(presets):
   presets = presets.replace('%2C', ',').split(',')
   GLOBALS.preset_thread.set_presets(presets)
+  return Response('ok', mimetype='text/plain')
+
+@app.route('/custom/<color_list>')
+def custom(color_list):
+  if GLOBALS.preset_thread.cur_presets:
+    GLOBALS.preset_thread.set_presets([])
+  color_list = color_list.lower()
+  color_list = [
+    colors.parse_rgb(color_list[j:j + 6])
+    for j in xrange(0, len(color_list), 6)]
+  for j in xrange(len(GLOBALS.leds.pixels)):
+    GLOBALS.leds.pixels[j] = color_list[j % len(color_list)]
+  GLOBALS.leds.flush()
   return Response('ok', mimetype='text/plain')
 
 @app.route('/get_colors')
