@@ -40,8 +40,8 @@ def main(argv):
     if not attempt_ping():
       st.kill_server()
       st = ServerThread(debug)
-      time.sleep(5)
-    time.sleep(120 + random.random() * 60)
+      time.sleep(600)
+    time.sleep(60 + random.random() * 30)
 
 if __name__ == '__main__':
   main(sys.argv)
