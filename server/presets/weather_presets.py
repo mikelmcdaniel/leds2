@@ -4,7 +4,7 @@ import math
 import time
 import random
 
-import led_controller
+import colors
 import weather
 import presets
 
@@ -45,7 +45,7 @@ class Sun(object):
   def draw(self, pixels, seconds_past):
     self._iterate(seconds_past)
     pos = len(pixels) * (0.9 + self.pos * 0.35)
-    pixels.draw_line(pos - self.width / 2, pos + self.width / 2, led_controller.RGB(250, 180, 0))
+    pixels.draw_line(pos - self.width / 2, pos + self.width / 2, colors.RGB(250, 180, 0))
 
 
 class Moon(object):
@@ -70,7 +70,7 @@ class Moon(object):
   def draw(self, pixels, seconds_past):
     self._iterate(seconds_past)
     pos = len(pixels) * (0.35 + self.pos * 0.45)
-    pixels.draw_line(pos - self.width / 2, pos + self.width / 2, led_controller.RGB(230, 230, 230))
+    pixels.draw_line(pos - self.width / 2, pos + self.width / 2, colors.RGB(230, 230, 230))
 
 class Cloud(object):
   def __init__(self):
@@ -83,7 +83,7 @@ class Cloud(object):
   def draw(self, pixels, seconds_past):
     self.pos = (self.pos + self.velocity * seconds_past) % 1.0
     pos = len(pixels) * self.pos
-    pixels.draw_line(pos - self.width / 2, pos + self.width / 2, led_controller.RGB(80, 80, 80, 0.5))
+    pixels.draw_line(pos - self.width / 2, pos + self.width / 2, colors.RGB(80, 80, 80, 0.5))
 
 
 class RainDrop(object):
@@ -101,7 +101,7 @@ class RainDrop(object):
   def draw(self, pixels, seconds_past):
     self._iterate(seconds_past)
     pos = len(pixels) * self.pos
-    pixels.draw_line(pos - self.width / 2, pos + self.width / 2, led_controller.RGB(0, 0, 255))
+    pixels.draw_line(pos - self.width / 2, pos + self.width / 2, colors.RGB(0, 0, 255))
 
 class WeatherPreset(presets.Preset):
   def __init__(self, name='Weather'):

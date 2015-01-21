@@ -2,7 +2,6 @@ import itertools
 import time
 
 import colors
-import led_controller
 import random
 import presets
 import presets.attributes as attributes

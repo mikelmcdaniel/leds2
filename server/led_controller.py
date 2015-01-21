@@ -10,13 +10,11 @@ import colors
 import pixels
 
 parse_rgb = colors.parse_rgb
-RGB = colors.RGB
-
 
 
 # TODO Add locking
 class BaseLeds(object):
-  def __init__(self, num_leds, default_color=RGB(127, 127, 127)):
+  def __init__(self, num_leds, default_color=colors.RGB(127, 127, 127)):
     self.pixels = pixels.Pixels(num_leds, default_color)
     self.default_color = default_color
     self._last_colors = ['%02x%02x%02x' % (p.r, p.g, p.b) for p in self.pixels]
