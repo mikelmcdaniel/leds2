@@ -20,7 +20,13 @@ class PresetLedThread(threading.Thread):
     self.enabled = enabled
 
   def set_presets(self, preset_names):
-    self.cur_presets = [self.presets[pn] for pn in preset_names]
+    last_presets = self.cur_presets
+    cur_presets = [self.presets[pn] for pn in preset_names]
+    for new_preset in set(cur_presets) - set(last_presets):
+      new_preset.setup(num_pixels=len(self.leds.pixels))
+    self.cur_presets = cur_presets
+    for old_preset in set(last_presets) - set(cur_presets):
+      old_preset.tear_down()
     self.post_update()
 
   def register_preset(self, preset):

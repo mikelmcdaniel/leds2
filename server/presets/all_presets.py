@@ -1,3 +1,4 @@
 import weather_presets
 import cars_presets
 import holiday_presets
+import camera_presets
