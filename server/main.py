@@ -163,7 +163,5 @@ if __name__ == '__main__':
   for preset in presets.PRESETS:
     GLOBALS.preset_thread.register_preset(preset)
     GLOBALS.presets.append(preset.name)
-  # set_presets('Solid Color,Cars')
-  set_presets('TV Background')
-  set_power(True)
+  set_presets('Solid Color,Cars')
   app.run(host='0.0.0.0', port=5000, debug=config.config['debug'], use_reloader=False)

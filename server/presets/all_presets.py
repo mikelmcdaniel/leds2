@@ -1,4 +1,14 @@
-import weather_presets
+# TODO: Log the ImportErrors
+try:
+  import weather_presets
+except ImportError:
+  pass
+
 import cars_presets
+
 import holiday_presets
-import camera_presets
+
+try:
+  import camera_presets
+except ImportError:
+  pass
