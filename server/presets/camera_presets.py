@@ -7,10 +7,11 @@ import cv2
 
 import colors
 import presets
+from presets import attributes
 
-class TVBackground(presets.Preset):
-  def __init__(self, name='TV Background'):
-    super(TVBackground, self).__init__(name)
+class CameraPreset(presets.Preset):
+  def __init__(self, name='Camera'):
+    super(CameraPreset, self).__init__(name)
     self._load_config()
     self.frame_ratio = 5
     self.camera = None
@@ -18,8 +19,11 @@ class TVBackground(presets.Preset):
     self.height = None
     self.masks = None
     self.mask_sums = None
+    self.camera_num = attributes.IntAttribute('camera_num', 0)
+    self.attributes['camera_num'] = self.camera_num
 
-  def _load_config(self, config_file='tv_background_config.txt'):
+
+  def _load_config(self, config_file='camera_preset_config.txt'):
     try:
       numbers = map(float, open(config_file).read().split())
     except IOError:
@@ -29,8 +33,8 @@ class TVBackground(presets.Preset):
     self.center = self.corners.mean(axis=0)
 
   def setup(self, num_pixels, **kwargs):
-    super(TVBackground, self).setup(num_pixels=num_pixels, **kwargs)
-    self.camera = cv2.VideoCapture(1)
+    super(CameraPreset, self).setup(num_pixels=num_pixels, **kwargs)
+    self.camera = cv2.VideoCapture(self.camera_num.val)
     self.width = int(self.camera.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH)) / self.frame_ratio
     self.height = int(self.camera.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT)) / self.frame_ratio
     # Generate masks
@@ -55,7 +59,7 @@ class TVBackground(presets.Preset):
       self.mask_sums.append(mask_sum)
 
   def tear_down(self, **kwargs):
-    super(TVBackground, self).tear_down(**kwargs)
+    super(CameraPreset, self).tear_down(**kwargs)
     self.camera.release()
     self.camera = None
 
@@ -86,4 +90,4 @@ class TVBackground(presets.Preset):
       pixels.draw_line(j * line_len, (j + 1) * line_len, colors.RGB(r, g, b, 0.5))
 
 
-presets.PRESETS.append(TVBackground())
+presets.PRESETS.append(CameraPreset())

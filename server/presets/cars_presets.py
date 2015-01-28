@@ -4,7 +4,7 @@ import time
 import colors
 import random
 import presets
-import presets.attributes as attributes
+from  presets import attributes
 
 
 RGBA = colors.RGBA
