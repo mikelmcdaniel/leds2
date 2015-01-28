@@ -95,8 +95,11 @@ class ExplodingCars(presets.Preset):
 
     for j, car_j in enumerate(self.cars):
       for k, car_k in enumerate(itertools.islice(self.cars, j + 1, num_cars), j + 1):
-        # if there is a collision:
-        if (car_j.x - car_k.x) * (car_j.x + seconds_past * car_j.xv - car_k.x - seconds_past * car_k.xv) < 0:
+        # if there is a collision with cars coming from opposite directions:
+        if (car_j.x - car_k.x) * (car_j.x + seconds_past * car_j.xv - car_k.x - seconds_past * car_k.xv) < 0 and car_j.xv * car_k.xv < 0:
+          # Optionally swap cars there's a chance of either car exploding.
+          if random.random() < 0.1:
+            self.cars[j], self.cars[k] = self.cars[k], self.cars[j]
           self.explosion_bits.extend(ExplosionBit(car_k.x, 0.05 * (-1 + 2 * random.random()), car_k.color, now + 0.1 + random.random()) for _ in xrange(5))
           self.cars[k] = self.cars[-1]
           self.cars.pop()
