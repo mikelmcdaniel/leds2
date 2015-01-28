@@ -36,29 +36,33 @@ class PresetLedThread(threading.Thread):
   # TODO Make this thread re-spawn if it dies.
   def run(self):
     while True:
-      cur_presets = self.cur_presets
-      if cur_presets and self.enabled:
-        seconds_per_frame = min(
-          cur_preset.seconds_per_frame for cur_preset in cur_presets)
-        try:
-          while self.next_update_time > time.time():
-            time.sleep(min(self.next_update_time - time.time(), 0.2))
-        except IOError as e:
-          if e.errno != 22:  # 22 -> "Invalid Argument"
-            raise e
-          # Tried to sleep for negative seconds.
-        # If the cur_presets have changed underneath us, restart this iteration.
-        if self.cur_presets != cur_presets: continue
-        now = time.time()
-        self.next_update_time = (now + seconds_per_frame)
-        if self.enabled:
-          # Attempt to keep track of the number of seconds_past since the last
-          # update.  However, bound it between 0 and 3 * seconds_per_frame.
-          seconds_past = min(max(now - self.last_update_time, 0), 3 * seconds_per_frame)
-          self.last_update_time = now
-          for cur_preset in cur_presets:
-            cur_preset.draw(self.leds.pixels, seconds_past)
-          self.leds.flush()
-      else:
-        time.sleep(0.2)
+      try:
+        cur_presets = self.cur_presets
+        if cur_presets and self.enabled:
+          seconds_per_frame = min(
+            cur_preset.seconds_per_frame for cur_preset in cur_presets)
+          try:
+            while self.next_update_time > time.time():
+              time.sleep(min(self.next_update_time - time.time(), 0.2))
+          except IOError as e:
+            if e.errno != 22:  # 22 -> "Invalid Argument"
+              raise e
+            # Tried to sleep for negative seconds.
+          # If the cur_presets have changed underneath us, restart this iteration.
+          if self.cur_presets != cur_presets: continue
+          now = time.time()
+          self.next_update_time = (now + seconds_per_frame)
+          if self.enabled:
+            # Attempt to keep track of the number of seconds_past since the last
+            # update.  However, bound it between 0 and 3 * seconds_per_frame.
+            seconds_past = min(max(now - self.last_update_time, 0), 3 * seconds_per_frame)
+            self.last_update_time = now
+            for cur_preset in cur_presets:
+              cur_preset.draw(self.leds.pixels, seconds_past)
+            self.leds.flush()
+        else:
+          time.sleep(0.2)
+      except Exception as e:
+        print 'PRESET THREAD ERROR:', e
+        time.sleep(5)
 
