@@ -1,4 +1,5 @@
 import random
+import socket
 import subprocess
 import sys
 import threading
@@ -27,8 +28,8 @@ def attempt_ping(max_pings=3):
       page = urllib2.urlopen('http://localhost:5000/ping', timeout=(j + 1))
       if page.read() == 'ok':
         return True
-    except urllib2.URLError:
-      pass
+    except (urllib2.URLError, socket.timeout) as e:
+      print 'PING ERROR:', e
   return False
 
 
