@@ -33,6 +33,11 @@ class IntAttribute(Attribute):
     super(IntAttribute, self).__init__(name, parser=int, *args, **kwargs)
 
 
+class FloatAttribute(Attribute):
+  def __init__(self, name, *args, **kwargs):
+    super(FloatAttribute, self).__init__(name, parser=float, *args, **kwargs)
+
+
 class ColorAttribute(Attribute):
   def __init__(self, name, default_val=colors.RGB(0xcc, 0x45, 0x18), *args, **kwargs):
     super(ColorAttribute, self).__init__(

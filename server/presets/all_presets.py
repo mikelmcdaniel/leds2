@@ -12,3 +12,5 @@ try:
   import camera_presets
 except ImportError:
   pass
+
+import fade_presets
