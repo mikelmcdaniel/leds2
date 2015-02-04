@@ -35,6 +35,7 @@ class BaseLeds(object):
     self.turned_on = turned_on
 
 class Leds(BaseLeds):
+  __CHECK_SUM_BYTES = [2, 3, 5, 7, 11, 13, 17, 19]
   def __init__(self, usb_device_file, num_leds, *args, **kwargs):
     super(Leds, self).__init__(num_leds=num_leds, *args, **kwargs)
     self.usb_device_file = usb_device_file
@@ -48,7 +49,7 @@ class Leds(BaseLeds):
       port=self.usb_device_file, baudrate=115200, timeout=100, writeTimeout=0)
 
   def _write_data(self, msg):
-    check_sum = sum(ord(c) for c in msg)
+    check_sum = sum((j + 1) * ord(c) * self.__CHECK_SUM_BYTES[j % 8] for j, c in enumerate(msg))
     parts = ['YNC']
     parts.append(msg)
     parts.append(chr(check_sum % 256))
