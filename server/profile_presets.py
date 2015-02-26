@@ -17,7 +17,10 @@ def profile_presets():
   for preset in presets.PRESETS:
     PRESET = preset
     print '***', preset.name
-    cProfile.run('run_preset(PRESET)')
+    try:
+      cProfile.run('run_preset(PRESET)')
+    except Exception as e:
+      print 'Exception:', e
 
 
 def main(argv):
