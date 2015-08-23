@@ -80,6 +80,13 @@ def set_power(turned_on):
   GLOBALS.leds.set_power(turned_on)
   return Response('ok', mimetype='text/plain')
 
+@app.route('/toggle_power')
+def toggle_power():
+  turned_on = not GLOBALS.leds.turned_on
+  GLOBALS.preset_thread.set_enabled(turned_on)
+  GLOBALS.leds.set_power(turned_on)
+  return Response('ok', mimetype='text/plain')
+
 @app.route('/presets/<presets>')
 def set_presets(presets):
   presets = presets.replace('%2C', ',').split(',')
@@ -113,11 +120,17 @@ def get_colors_html():
 @app.route('/help')
 def help():
   help_msg = '''The following endpoints are supported URLs (regex):
+<site>/help
+Display this help message.
+
 <site>/presets/[A-Za-z ,]+
-Starts one of the presets programs.
+Starts one or more of the presets programs.
 
 <site>/set_power/(on|off|true|false|True|False|1|0)
 Set the power of the led strips to be on or off.
+
+<site>/toggle_power
+Toggles the power of the led strips to be on or off.
 
 <site>/get_colors
 Returns a list of space-delimited html-color codes representing the current colors of all the leds.
