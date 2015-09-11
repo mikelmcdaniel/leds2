@@ -15,12 +15,13 @@ class Attribute(object):
     self.parser = parser
     self.checker = checker
     self.val = default_val
+    self.raw_val = str(default_val)
 
-  def set_val(self, v):
-    assert isinstance(v, basestring)
-    v = self.parser(v)
+  def set_val(self, raw):
+    assert isinstance(raw, basestring)
+    v = self.parser(raw)
     self.checker(v)
-    self.val = v
+    self.val, self.raw_val = v, raw
 
   def selector_html(self, html_name=None):
     if html_name is None: html_name = self.name
