@@ -29,6 +29,10 @@ class Attribute(object):
       name=encoded_html_name(self.name), val=self.val)
 
 
+class StrAttribute(Attribute):
+  pass
+
+
 class IntAttribute(Attribute):
   def __init__(self, name, *args, **kwargs):
     super(IntAttribute, self).__init__(name, parser=int, *args, **kwargs)

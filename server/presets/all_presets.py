@@ -14,3 +14,5 @@ except ImportError:
   pass
 
 import fade_presets
+
+import brain_fsck

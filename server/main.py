@@ -58,7 +58,7 @@ def set_global_vars(global_vars, presets, variables, variables_save_file):
 def main():
   set_global_vars(
     GLOBALS.variables, presets.PRESETS,
-    request.args,
+    dict((k, v) for k, v in request.args.iteritems()),
     GLOBALS.variables_save_file)
 
   selectors_html = []
