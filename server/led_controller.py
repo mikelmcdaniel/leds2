@@ -1,7 +1,10 @@
+"""This class represents LEDs, including their buffered and actual states."""
+
 import itertools
 import math
 import random
 import serial
+import StringIO
 import threading
 import time
 
@@ -9,10 +12,10 @@ import config
 import colors
 import pixels
 
+
 parse_rgb = colors.parse_rgb
 
 
-# TODO Add locking
 class BaseLeds(object):
   def __init__(self, num_leds, default_color=colors.RGB(127, 127, 127)):
     self.pixels = pixels.Pixels(num_leds, default_color)
@@ -34,14 +37,16 @@ class BaseLeds(object):
   def set_power(self, turned_on):
     self.turned_on = turned_on
 
+
 class Leds(BaseLeds):
   __CHECK_SUM_BYTES = [2, 3, 5, 7, 11, 13, 17, 19]
-  def __init__(self, usb_device_file, num_leds, *args, **kwargs):
-    super(Leds, self).__init__(num_leds=num_leds, *args, **kwargs)
+  def __init__(self, usb_device_file, num_leds, **kwargs):
+    super(Leds, self).__init__(num_leds=num_leds, **kwargs)
     self.usb_device_file = usb_device_file
     self._init_usb()
-    self.last_update_time = 0
+    self.next_update_time = 0
     self._half_reversed = config.config['half_reversed']
+    self._lock = threading.Lock()
 
   def _init_usb(self):
     # writeTimeout=0 makes the flush() operation asynchronous.
@@ -49,19 +54,23 @@ class Leds(BaseLeds):
       port=self.usb_device_file, baudrate=115200, timeout=100, writeTimeout=0)
 
   def _write_data(self, msg):
-    check_sum = sum((j + 1) * ord(c) * self.__CHECK_SUM_BYTES[j % 8] for j, c in enumerate(msg))
+    check_sum = sum((j + 1) * ord(c) * self.__CHECK_SUM_BYTES[j % 8]
+                    for j, c in enumerate(msg))
     parts = ['YNC']
     parts.append(msg)
     parts.append(chr(check_sum % 256))
     parts.append(chr(check_sum / 256 % 256))
     parts.append('S')
     msg_data = ''.join(parts)
-    delay_time = self.last_update_time + 0.005 - time.time()
-    if delay_time > 0:
-      time.sleep(delay_time)
-    self.usb.write(msg_data)
-    self.usb.flush()
-    self.last_update_time = time.time()
+    with self._lock:
+      # Force a delay if necessary since the Arduino can only handle a
+      # certain bandwidth.
+      delay_time = self.next_update_time - time.time()
+      if delay_time > 0:
+        time.sleep(delay_time)
+      self.usb.write(msg_data)
+      self.usb.flush()
+      self.next_update_time = time.time() + 0.005
 
   def flush(self):
     super(Leds, self).flush()
@@ -79,8 +88,9 @@ class Leds(BaseLeds):
 
   def reset(self):
     super(Leds, self).reset()
-    self.usb.close()
-    self._init_usb()
+    with self._lock:
+      self.usb.close()
+      self._init_usb()
 
   def set_power(self, turned_on):
     super(Leds, self).set_power(turned_on)
@@ -92,5 +102,16 @@ class Leds(BaseLeds):
     if self.turned_on:
       self.flush()
 
-class FakeLeds(BaseLeds):
-  pass
+
+class FakeLeds(Leds):
+  def __init__(self, num_leds, **kwargs):
+    super(FakeLeds, self).__init__(
+      usb_device_file='fake_leds_{}'.format(id(self)),
+      num_leds=num_leds, **kwargs)
+
+  def _init_usb(self):
+    self.usb = StringIO.StringIO()
+
+  def _write_data(self, msg):
+    super(FakeLeds, self)._write_data(msg)
+    self.usb.truncate(0)
