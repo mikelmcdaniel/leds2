@@ -5,7 +5,7 @@ import sys
 import time
 import urllib2
 
-def make_server_proc(self, mode):
+def make_server_proc(mode):
   return subprocess.Popen(['python2', 'main.py', mode], close_fds=True, env={})
 
 def ping(max_pings=3):
