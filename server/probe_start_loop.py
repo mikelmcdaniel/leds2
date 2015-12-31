@@ -2,26 +2,13 @@ import random
 import socket
 import subprocess
 import sys
-import threading
 import time
 import urllib2
 
-class ServerThread(threading.Thread):
-  def __init__(self, debug=False):
-    super(ServerThread, self).__init__()
-    self.setDaemon(True)
-    mode = 'debug' if debug else 'prod'
-    self.server_proc = subprocess.Popen(['python2', 'main.py', mode], close_fds=True, env={})
-    self.start()
+def make_server_proc(self, mode):
+  return subprocess.Popen(['python2', 'main.py', mode], close_fds=True, env={})
 
-  def run(self):
-    self.server_proc.communicate()
-
-  def kill_server(self):
-    self.server_proc.kill()
-
-
-def attempt_ping(max_pings=3):
+def ping(max_pings=3):
   for j in xrange(max_pings):
     time.sleep(j)
     try:
@@ -35,14 +22,22 @@ def attempt_ping(max_pings=3):
 
 def main(argv):
   assert argv[1] in ('debug', 'prod')
-  debug = True if argv[1] == 'debug' else False
-  st = ServerThread(debug)
+  mode = argv[1]
+  debug = True if mode == 'debug' else False
+  server_proc = make_server_proc(mode)
   while True:
-    if not attempt_ping():
-      st.kill_server()
-      st = ServerThread(debug)
-      time.sleep(600)
-    time.sleep(60 + random.random() * 30)
+    if server_proc.poll() is not None:
+      server_proc = make_server_proc(mode)
+    elif not ping():
+      server_proc.terminate()
+      time.sleep(1)
+      server_proc.kill()
+      time.sleep(1)
+      server_proc = make_server_proc(mode)
+    for _ in xrange(random.randint(60, 90)):
+      time.sleep(1)
+      if server_proc.poll() is not None:
+        break
 
 if __name__ == '__main__':
   main(sys.argv)
