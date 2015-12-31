@@ -54,3 +54,23 @@ class ColorAttribute(Attribute):
     return '<input type="color" name="{name}" value="#{val}" defaultValue="#{val}" onchange="this.form.submit()"></input>'.format(
       name=encoded_html_name(self.name), val=self.val.html_color_code())
 
+
+class TimeAttribute(Attribute):
+  @staticmethod
+  def parse_time(string):
+    parts = string.split(':', 1)
+    assert len(parts) == 2
+    hours = int(parts[0])
+    minutes = int(parts[1])
+    return hours, minutes
+
+  def __init__(self, name, default_val=(0, 0), *args, **kwargs):
+    super(TimeAttribute, self).__init__(
+      name, default_val=default_val, parser=TimeAttribute.parse_time,
+      *args, **kwargs)
+
+  def selector_html(self, html_name=None):
+    if html_name is None: html_name = self.name
+    return '<input type="time" name="{name}" onchange="this.form.submit()"></input>'.format(
+      name=encoded_html_name(self.name))
+
