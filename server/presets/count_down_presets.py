@@ -50,31 +50,32 @@ class CountDown(presets.Preset):
       pixels.draw_line(0, len(pixels), RGBA(0, 0, 0, 1))  # make it black!
       section_len = float(len(pixels)) / 10
       section_progress = min(-seconds_left % 1.0 * 2, 1.0)
-      for j in xrange(10 - int_seconds_left):
+      for j in xrange(9 - int_seconds_left):
         pixels.draw_line(j * section_len, j * section_len + section_len,
                          rainbow_color(j * 1536 / 10))
-      j = 10 - int_seconds_left
+      j = 9 - int_seconds_left
       pixels.draw_line(j * section_len, j * section_len + (section_progress) * section_len,
                        rainbow_color(j * 1536 / 10))
-    elif seconds_left < 30:  # and seconds_left >= 10
-      progress = 1.0 - (seconds_left - 10) / 20
+    elif seconds_left < 20:  # and seconds_left >= 10
+      progress = 1.0 - (seconds_left - 10) / 10
       pixels.draw_line(0, len(pixels), RGBA(0, 0, 0, progress))  # fade to black
-    elif seconds_left > seconds_per_day - 10:
+    elif seconds_left > seconds_per_day - 30:
       seconds_over = seconds_per_day - seconds_left
-      progress = seconds_over / 10
-      pixels.draw_line(0, len(pixels), RGBA(0, 0, 0, 1 - progress))
-      for _ in xrange(int((10 - seconds_over) * 10)):
-        pixels[random.randrange(len(pixels))] = rainbow_color(random.randint(0, 1536))
+      progress = seconds_over / 30
+      pixels.draw_line(0, len(pixels), RGBA(0, 0, 0, (1 - progress)**2))
+      for _ in xrange(int(progress * 100)):
+        i = random.randrange(len(pixels))
+        pixels[i] = pixels[i].mixed(rainbow_color(random.randint(0, 1536)), 1 - progress)
 
     # draw binary count down
     num_bits = int(math.ceil(math.log(seconds_left + 1, 2)))
-    offset = self.offset.val - num_bits
+    offset = self.offset.val - 1
     if seconds_left < seconds_per_day - 3600:  # only draw countdown for < 23 hours
       for j in xrange(num_bits):
-        if (1 << (num_bits - j - 1)) & int_seconds_left:
-          pixels[offset + j] = rainbow_color(seconds_left * 5 + j * 1536.0 / num_bits)
+        if (1 << j) & int_seconds_left:
+          pixels[offset - j] = rainbow_color(seconds_left * 5 + j * 1536.0 / 2)
         else:
-          pixels[offset + j] = BLACK
+          pixels[offset - j] = BLACK
 
 
 presets.PRESETS.append(CountDown())
