@@ -3,6 +3,7 @@ import os
 from sys import argv, exit
 from time import sleep
 import serial
+import signal
 
 import colors
 import config
@@ -181,7 +182,7 @@ def ping():
 
 @app.route('/quit')
 def quit():
-  exit(0)
+  os.kill(os.getpid(), signal.SIGTERM)
   return Response('ok', mimetype='text/plain')
 
 
