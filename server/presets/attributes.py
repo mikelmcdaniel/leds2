@@ -71,6 +71,7 @@ class TimeAttribute(Attribute):
 
   def selector_html(self, html_name=None):
     if html_name is None: html_name = self.name
-    return '<input type="time" name="{name}" onchange="this.form.submit()"></input>'.format(
-      name=encoded_html_name(self.name))
+    return '<input type="time" name="{name}" value="{val}" onfocusout="if (this.value != \'{val}\') this.form.submit();"></input>'.format(
+      name=encoded_html_name(self.name),
+      val='{:02d}:{:02d}'.format(*self.val))
 
