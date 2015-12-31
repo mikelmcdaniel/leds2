@@ -44,8 +44,11 @@ class Cars(presets.Preset):
     self.cars = []
     self.num_cars = attributes.IntAttribute('num_cars', 10)
     self.attributes['num_cars'] = self.num_cars
+    self.speed = attributes.FloatAttribute('speed', 1.0)
+    self.attributes['speed'] = self.speed
 
   def draw(self, pixels, seconds_past):
+    seconds_past *= self.speed.val
     num_cars = self.num_cars.val
     self.cars.extend(
       Car(random.random() * len(pixels), 0.01 + random.random() * 0.01, random.randint(0, 1535))
