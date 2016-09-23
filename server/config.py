@@ -15,7 +15,7 @@ configs = (
     'name': 'living_room',
     'usb_file_name': '/dev/serial/by-id/usb-Arduino__www.arduino.cc__0043_95232343833351603170-if00',
     'board_tag': 'uno',
-    'half_reversed': 1,
+    'half_reversed': 2,
     'rgb_order': 'brg',
     'num_leds': 200,
     'debug': True,

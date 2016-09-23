@@ -3,9 +3,8 @@
 
 
 // #define NUM_LEDS 144L
-#define OUT_BYTE1 2
-#define OUT_BYTE2 8
-#define OUT_BYTE (OUT_BYTE1 | OUT_BYTE2)
+const int OUT_BYTES[] = {1, 2, 4, 8};
+const int OUT_BYTES_OR = 1 | 2 | 4 | 8;
 
 // global pixels array
 uint8_t buffer[NUM_LEDS * 3 + 3 + 2]; // 'NC' + check_sum + 'S'
@@ -17,10 +16,6 @@ void ws2811_send_pixels(const uint8_t* pixels24,
   uint8_t mask;
   // Add an extra byte to the end because the assembly code breaks a byte early.
   const uint8_t *pixels24_end = &pixels24[pixels24_size * 3 + 1];
-  uint8_t old_SREG;
-
-  old_SREG = SREG;
-  cli();
 
   asm volatile(
 "  wsc_outer_for:\n"
@@ -87,19 +82,29 @@ void ws2811_send_pixels(const uint8_t* pixels24,
   [mask] "a" (mask)// input operands
 : "r24","r25" // optional clobber list
 );
-  SREG = old_SREG;
 }
 
 
 inline void send_pixels(uint8_t * pixels) {
+  uint8_t old_SREG;
+
+  old_SREG = SREG;
+  cli();
+
 #if HALF_REVERSED == 0
-  ws2811_send_pixels(pixels, NUM_LEDS, OUT_BYTE);
+  ws2811_send_pixels(pixels, NUM_LEDS, OUT_BYTES_OR);
 #elif HALF_REVERSED == 1
-  ws2811_send_pixels(pixels,                    NUM_LEDS / 2, OUT_BYTE1);
-  ws2811_send_pixels(pixels + 3 * NUM_LEDS / 2, NUM_LEDS / 2, OUT_BYTE2);
+  ws2811_send_pixels(pixels,                    NUM_LEDS / 2, OUT_BYTES[1]);
+  ws2811_send_pixels(pixels + 3 * NUM_LEDS / 2, NUM_LEDS / 2, OUT_BYTES[3]);
+#elif HALF_REVERSED == 2
+  ws2811_send_pixels(pixels,                    NUM_LEDS / 4, OUT_BYTES[0]);
+  ws2811_send_pixels(pixels + 3 * NUM_LEDS / 4, NUM_LEDS / 4, OUT_BYTES[1]);
+  ws2811_send_pixels(pixels + 6 * NUM_LEDS / 4, NUM_LEDS / 4, OUT_BYTES[2]);
+  ws2811_send_pixels(pixels + 9 * NUM_LEDS / 4, NUM_LEDS / 4, OUT_BYTES[3]);
 #else
-#error "HALF_REVERSED not 0 or 1"
+#error "HALF_REVERSED not 0, 1, or 2"
 #endif
+  SREG = old_SREG;
 }
 
 void setup() {
@@ -107,7 +112,9 @@ void setup() {
   Serial.begin(115200);
 
   // LEDs
+  pinMode(8, OUTPUT);
   pinMode(9, OUTPUT);
+  pinMode(10, OUTPUT);
   pinMode(11, OUTPUT);
 
   // LED Power
